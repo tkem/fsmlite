@@ -5,8 +5,9 @@
 #include "fsm.hpp"
 
 class player: public fsmlite::fsm<player> {
+    friend class fsm;  // base class needs access to transition_table
 public:
-    enum { Stopped, Open, Empty, Playing, Paused };
+    enum states { Stopped, Open, Empty, Playing, Paused };
 
     player(state_type init_state = Empty) : fsm(init_state) {}
 
@@ -31,23 +32,21 @@ private:
 
 private:
     struct transition_table: table<
-//       Start    Event        Target   Action
-//  ----+--------+------------+--------+------------------------+--
-    row< Stopped, play,        Playing, &player::start_playback  >,
-    row< Stopped, open_close,  Open,    &player::open_drawer     >,
-    row< Open,    open_close,  Empty,   &player::close_drawer    >,
-    row< Empty,   open_close,  Open,    &player::open_drawer     >,
-    row< Empty,   cd_detected, Stopped, &player::store_cd_info   >,
-    row< Playing, stop,        Stopped, &player::stop_playback   >,
-    row< Playing, pause,       Paused,  &player::pause_playback  >,
-    row< Playing, open_close,  Open,    &player::stop_and_open   >,
-    row< Paused,  play,        Playing, &player::resume_playback >,
-    row< Paused,  stop,        Stopped, &player::stop_playback   >,
-    row< Paused,  open_close,  Open,    &player::stop_and_open   >
-//  ----+--------+------------+--------+------------------------+--
+//              Start    Event        Target   Action
+//  -----------+--------+------------+--------+------------------------+--
+    mem_fn_row< Stopped, play,        Playing, &player::start_playback  >,
+    mem_fn_row< Stopped, open_close,  Open,    &player::open_drawer     >,
+    mem_fn_row< Open,    open_close,  Empty,   &player::close_drawer    >,
+    mem_fn_row< Empty,   open_close,  Open,    &player::open_drawer     >,
+    mem_fn_row< Empty,   cd_detected, Stopped, &player::store_cd_info   >,
+    mem_fn_row< Playing, stop,        Stopped, &player::stop_playback   >,
+    mem_fn_row< Playing, pause,       Paused,  &player::pause_playback  >,
+    mem_fn_row< Playing, open_close,  Open,    &player::stop_and_open   >,
+    mem_fn_row< Paused,  play,        Playing, &player::resume_playback >,
+    mem_fn_row< Paused,  stop,        Stopped, &player::stop_playback   >,
+    mem_fn_row< Paused,  open_close,  Open,    &player::stop_and_open   >
+//  -----------+--------+------------+--------+------------------------+--
     > {};
-
-    friend fsm_type;  // base class needs access to transition_table
 };
 
 void player::start_playback(play const&) {
@@ -82,21 +81,24 @@ void player::resume_playback(play const&) {
     std::cout << "Resuming playback\n";
 }
 
-template<class Event>
-player::state_type transition(player& p, Event const& e) {
-    p.process_event(e);
-    return p.current_state();
-}
-
 int main()
 {
     player p;
-    assert(transition(p, player::open_close()) == player::Open);
-    assert(transition(p, player::open_close()) == player::Empty);
-    assert(transition(p, player::cd_detected("Rubber Soul")) == player::Stopped);
-    assert(transition(p, player::play()) == player::Playing);
-    assert(transition(p, player::pause()) == player::Paused);
-    assert(transition(p, player::open_close()) == player::Open);
-    assert(transition(p, player::open_close()) == player::Empty);
+
+    p.process_event(player::open_close());
+    assert(p.current_state() == player::Open);
+    p.process_event(player::open_close());
+    assert(p.current_state() == player::Empty);
+    p.process_event(player::cd_detected("Rubber Soul"));
+    assert(p.current_state() == player::Stopped);
+    p.process_event(player::play());
+    assert(p.current_state() == player::Playing);
+    p.process_event(player::pause());
+    assert(p.current_state() == player::Paused);
+    p.process_event(player::open_close());
+    assert(p.current_state() == player::Open);
+    p.process_event(player::open_close());
+    assert(p.current_state() == player::Empty);
+
     return 0;
 }

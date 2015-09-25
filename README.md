@@ -1,15 +1,17 @@
 **fsmlite** is a lightweight finite state machine framework for C++11.
 
-Like many other C++ state machine implementations, **fsmlite** is based
-on concepts first presented by David Abrahams and Aleksey Gurtovoy in
-[C++ Template Metaprogramming][1], with additional ideas taken liberally
-from Boost's [MSM][2].  Unsurprisingly, the canonical CD player example
-looks somewhat like this:
+Like many other C++ state machine implementations, **fsmlite** is
+based on concepts first presented by David Abrahams and Aleksey
+Gurtovoy in [C++ Template Metaprogramming][1], with additional ideas
+taken liberally from Boost's [Meta State Machine][2] (MSM).
+Unsurprisingly, the canonical CD player example looks somewhat like
+this:
 
-```
+```C++
 #include <fsmlite/fsm.hpp>
 
 class player: public fsmlite::fsm<player> {
+    friend class fsm;  // base class needs access to transition_table
 public:
     enum states { Stopped, Open, Empty, Playing, Paused };
 
@@ -36,23 +38,21 @@ private:
 
 private:
     struct transition_table: table<
-//       Start    Event        Target   Action
-//  ----+--------+------------+--------+------------------------+--
-    row< Stopped, play,        Playing, &player::start_playback  >,
-    row< Stopped, open_close,  Open,    &player::open_drawer     >,
-    row< Open,    open_close,  Empty,   &player::close_drawer    >,
-    row< Empty,   open_close,  Open,    &player::open_drawer     >,
-    row< Empty,   cd_detected, Stopped, &player::store_cd_info   >,
-    row< Playing, stop,        Stopped, &player::stop_playback   >,
-    row< Playing, pause,       Paused,  &player::pause_playback  >,
-    row< Playing, open_close,  Open,    &player::stop_and_open   >,
-    row< Paused,  play,        Playing, &player::resume_playback >,
-    row< Paused,  stop,        Stopped, &player::stop_playback   >,
-    row< Paused,  open_close,  Open,    &player::stop_and_open   >
-//  ----+--------+------------+--------+------------------------+--
+//              Start    Event        Target   Action
+//  -----------+--------+------------+--------+------------------------+--
+    mem_fn_row< Stopped, play,        Playing, &player::start_playback  >,
+    mem_fn_row< Stopped, open_close,  Open,    &player::open_drawer     >,
+    mem_fn_row< Open,    open_close,  Empty,   &player::close_drawer    >,
+    mem_fn_row< Empty,   open_close,  Open,    &player::open_drawer     >,
+    mem_fn_row< Empty,   cd_detected, Stopped, &player::store_cd_info   >,
+    mem_fn_row< Playing, stop,        Stopped, &player::stop_playback   >,
+    mem_fn_row< Playing, pause,       Paused,  &player::pause_playback  >,
+    mem_fn_row< Playing, open_close,  Open,    &player::stop_and_open   >,
+    mem_fn_row< Paused,  play,        Playing, &player::resume_playback >,
+    mem_fn_row< Paused,  stop,        Stopped, &player::stop_playback   >,
+    mem_fn_row< Paused,  open_close,  Open,    &player::stop_and_open   >
+//  -----------+--------+------------+--------+------------------------+--
     > {};
-
-    friend fsm_type;  // base class needs access to transition_table
 };
 ```
 

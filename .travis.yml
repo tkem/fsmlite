@@ -1,0 +1,8 @@
+language: cpp
+
+compiler:
+- clang
+# - gcc  # travis uses gcc 4.6.3 which does not support C++11
+
+before_script:
+- sh autogen.sh

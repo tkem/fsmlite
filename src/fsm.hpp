@@ -29,16 +29,15 @@
 
 namespace fsmlite {
 
-    namespace mpl {
+    namespace traits {
 
         template<class...> struct list {};
 
         template<class...> struct concat;
 
-        template<class T, class... Args>
-        struct concat<T, list<Args...>>
-        {
-            using type = list<T, Args...>;
+        template<class T, class... Types>
+        struct concat<T, list<Types...>> {
+            using type = list<T, Types...>;
         };
 
         template<>
@@ -48,13 +47,13 @@ namespace fsmlite {
 
         template<template<typename> class Predicate, class...> struct filter;
 
-        template<template<typename> class Predicate, class Head, class... Tail>
-        struct filter<Predicate, Head, Tail...>
+        template<template<typename> class Predicate, class T, class... Types>
+        struct filter<Predicate, T, Types...>
         {
             using type = typename std::conditional<
-                Predicate<Head>::value,
-                typename concat<Head, typename filter<Predicate, Tail...>::type>::type,
-                typename filter<Predicate, Tail...>::type
+                Predicate<T>::value,
+                typename concat<T, typename filter<Predicate, Types...>::type>::type,
+                typename filter<Predicate, Types...>::type
             >::type;
         };
 
@@ -62,6 +61,7 @@ namespace fsmlite {
         struct filter<Predicate> {
             using type = list<>;
         };
+
     }
 
     template<class Derived, class State = int>
@@ -70,8 +70,7 @@ namespace fsmlite {
         using state_type = State;
 
     public:
-        fsm() : state() {}
-        fsm(state_type init_state) : state(init_state) {}
+        fsm(state_type init_state = state_type()) : state(init_state) {}
 
         template<class Event>
         void process_event(Event const& e) {
@@ -83,72 +82,172 @@ namespace fsmlite {
         state_type current_state() const { return state; }
 
     protected:
-        using fsm_type = fsm;
-
         template<class Event>
         state_type no_transition(state_type state, Event const&) {
             return state;
         }
 
+    private:
+        template<class Event, void (*action)(Derived&, Event const&)>
+        struct make_fn_action {
+            static constexpr bool valid = action != nullptr;
+
+            using type = typename std::conditional<valid, make_fn_action, void>::type;
+
+            void operator()(Derived& self, Event const& e) {
+                action(self, e);
+            }
+        };
+
+        template<class Event, bool (*guard)(Derived const&, Event const&)>
+        struct make_fn_guard {
+            static constexpr bool valid = true;  // FIXME: guard != nullptr (gcc)
+
+            using type = typename std::conditional<valid, make_fn_guard, void>::type;
+
+            bool operator()(Derived const& self, Event const& e) {
+                return guard != nullptr ? guard(self, e) : true;
+            }
+        };
+
+        template<class Event, void (Derived::*action)(Event const&)>
+        struct make_mem_fn_action {
+            static constexpr bool valid = action != nullptr;
+
+            using type = typename std::conditional<valid, make_mem_fn_action, void>::type;
+
+            void operator()(Derived& self, Event const& e) {
+                (self.*action)(e);
+            }
+        };
+
+        template<class Event, bool (Derived::*guard)(Event const&) const>
+        struct make_mem_fn_guard {
+            static constexpr bool valid = true;  // FIXME: guard != nullptr (gcc)
+
+            using type = typename std::conditional<valid, make_mem_fn_guard, void>::type;
+
+            bool operator()(Derived const& self, Event const& e) {
+                return guard != nullptr ? (self.*guard)(e) : true;
+            }
+        };
+
     protected:
-        template<class... Args>
+        template<class... Rows>
         struct table {
             template<class Event>
             static state_type process(Derived* self, state_type state, Event const& e) {
-                using args = typename filter_by_event_type<Event, Args...>::type;
-                return invoke<Event, args>::execute(self, state, e);
+                using rows = typename filter_by_event_type<Event, Rows...>::type;
+                return invoke<Event, rows>::execute(self, state, e);
+            }
+        };
+
+        template<State Start, class Event, State Target>
+        struct row_base {
+            using state_type = State;
+            using event_type = Event;
+
+            static constexpr state_type start_value = Start;
+            static constexpr state_type target_value = Target;
+
+            static constexpr state_type process(Derived*, state_type, Event const&) {
+                return target_value;
+            }
+
+            static constexpr bool check_guard(Derived const*, Event const&) {
+                return true;
             }
         };
 
         template<
-            State start,
+            State Start,
             class Event,
-            State target,
-            void (Derived::*action)(Event const&) = nullptr,
-            bool (Derived::*guard)(Event const&) = nullptr
+            State Target,
+            class Action = void,
+            class Guard = void
         >
-        struct row {
-            using state_type = State;
-            using event_type = Event;
+        struct row;
 
-            static constexpr state_type start_value = start;
-            static constexpr state_type target_value = target;
+        template<State Start, class Event, State Target>
+        struct row<Start, Event, Target, void, void> : row_base<Start, Event, Target> {
+        };
 
-            static state_type process(Derived* self, state_type state, Event const& e) {
-                if (action) {
-                    (self->*action)(e);
-                }
-                return target_value;
-            }
-
-            static bool check(Derived* self, Event const& e) {
-                return guard ? (self->*guard)(e) : true;
+        template<State Start, class Event, State Target, class Action>
+        struct row<Start, Event, Target, Action, void> : row_base<Start, Event, Target> {
+            static state_type process(Derived* self, state_type, Event const& e) {
+                Action()(*self, e);
+                return Target;
             }
         };
+
+        template<State Start, class Event, State Target, class Guard>
+        struct row<Start, Event, Target, void, Guard> : row_base<Start, Event, Target> {
+            static bool check_guard(Derived const* self, Event const& e) {
+                return Guard()(*self, e);
+            }
+        };
+
+        template<State Start, class Event, State Target, class Action, class Guard>
+        struct row : row_base<Start, Event, Target> {
+            static state_type process(Derived* self, state_type, Event const& e) {
+                Action()(*self, e);
+                return Target;
+            }
+
+            static bool check_guard(Derived const* self, Event const& e) {
+                return Guard()(*self, e);
+            }
+        };
+
+        template<
+            State Start,
+            class Event,
+            State Target,
+            void (*action)(Derived&, Event const&),
+            bool (*guard)(Derived const&, Event const&) = nullptr
+        >
+        struct fn_row : row<
+            Start, Event, Target,
+            typename make_fn_action<Event, action>::type,
+            typename make_fn_guard<Event, guard>::type
+        > {};
+
+        template<
+            State Start,
+            class Event,
+            State Target,
+            void (Derived::*action)(Event const&),
+            bool (Derived::*guard)(Event const&) const = nullptr
+        >
+        struct mem_fn_row : row<
+            Start, Event, Target,
+            typename make_mem_fn_action<Event, action>::type,
+            typename make_mem_fn_guard<Event, guard>::type
+        > {};
 
     private:
         template<class T, class Event>
         struct has_event_type : std::is_same<typename T::event_type, Event> {};
 
-        template<class Event, class... Args>
+        template<class Event, class... Types>
         struct filter_by_event_type {
             template <class T> using predicate = has_event_type<T, Event>;
-            using type = typename mpl::filter<predicate, Args...>::type;
+            using type = typename traits::filter<predicate, Types...>::type;
         };
 
         template<class Event, class...> struct invoke;
 
-        template<class Event, class Head, class... Tail>
-        struct invoke<Event, mpl::list<Head, Tail...>> {
+        template<class Event, class T, class... Types>
+        struct invoke<Event, traits::list<T, Types...>> {
             static State execute(Derived* self, State state, Event const& event) {
-                return state == Head::start_value && Head::check(self, event)
-                    ? Head::process(self, state, event)
-                    : invoke<Event, mpl::list<Tail...>>::execute(self, state, event);
+                return state == T::start_value && T::check_guard(self, event)
+                    ? T::process(self, state, event)
+                    : invoke<Event, traits::list<Types...>>::execute(self, state, event);
             }
         };
 
         template<class Event>
-        struct invoke<Event, mpl::list<>> {
+        struct invoke<Event, traits::list<>> {
             static State execute(Derived* self, State state, Event const& e) {
                 return self->no_transition(state, e);
             }
