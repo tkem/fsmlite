@@ -22,14 +22,6 @@ private:
         return e.value % 2 != 0;
     }
 
-    static bool is_even_s(const state_machine&, event const& e) {
-        return e.value % 2 == 0;
-    }
-
-    static bool is_odd_s(const state_machine&, event const& e) {
-        return e.value % 2 != 0;
-    }
-
 private:
     typedef state_machine m;
 
@@ -38,8 +30,8 @@ private:
 //  -----------+-----+------+------+--------+--------------+--
     mem_fn_row< Init, event, Even,  nullptr, &m::is_even    >,
     mem_fn_row< Init, event, Odd,   nullptr, &m::is_odd     >,
-    fn_row    < Even, event, Even,  nullptr, &m::is_even_s  >,
-    fn_row    < Even, event, Odd,   nullptr, &m::is_odd_s   >,
+    mem_fn_row< Even, event, Even,  nullptr, &m::is_even    >,
+    mem_fn_row< Even, event, Odd,   nullptr, &m::is_odd     >,
     mem_fn_row< Odd,  event, Even,  nullptr, &m::is_even    >,
     mem_fn_row< Odd,  event, Odd,   nullptr  /* fallback */ >
 //  -----------+-----+------+------+--------+--------------+--

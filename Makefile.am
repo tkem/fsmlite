@@ -7,3 +7,6 @@ EXTRA_DIST = LICENSE README.md
 
 # Travis CI uses `make test` by default
 test: check
+
+man:
+	$(MAKE) -C docs man

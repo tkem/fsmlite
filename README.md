@@ -4,6 +4,7 @@ Like many other C++ state machine implementations, **fsmlite** is
 based on concepts first presented by David Abrahams and Aleksey
 Gurtovoy in [C++ Template Metaprogramming][1], with additional ideas
 taken liberally from Boost's [Meta State Machine][2] (MSM).
+
 Unsurprisingly, the canonical CD player example looks somewhat like
 this:
 
@@ -56,5 +57,10 @@ private:
 };
 ```
 
+[Documentation][3] is in the works.  In the mean time, please have a
+look at the [unit tests][4] for example usage.
+
 [1]: http://www.informit.com/store/c-plus-plus-template-metaprogramming-concepts-tools-9780321227256
 [2]: http://www.boost.org/doc/libs/1_59_0/libs/msm/doc/HTML/index.html
+[3]: http://fsmlite.readthedocs.org/en/latest/
+[4]: https://github.com/tkem/fsmlite/tree/master/tests

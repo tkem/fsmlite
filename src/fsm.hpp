@@ -29,7 +29,7 @@
 
 namespace fsmlite {
 
-    namespace traits {
+    namespace detail {
 
         template<class...> struct list {};
 
@@ -64,30 +64,83 @@ namespace fsmlite {
 
     }
 
+    /**
+     * Finite state machine (FSM) base class template.
+     *
+     * @tparam Derived the derived state machine class
+     *
+     * @tparam State the state type to use, defaults to `int`
+     */
     template<class Derived, class State = int>
     class fsm {
     public:
-        using state_type = State;
+        /**
+         * The state machine's state type.
+         */
+        typedef State state_type;
 
     public:
-        fsm(state_type init_state = state_type()) : state(init_state) {}
+        /**
+         * Create a state machine with a default initial state.
+         */
+        fsm() : m_state() {}
 
+        /**
+         * Create a state machine with a custom initial state.
+         *
+         * @param init_state the state machine's initial state
+         */
+        fsm(state_type init_state) : m_state(init_state) {}
+
+        /**
+         * Process an event.
+         *
+         * @tparam Event the event tyoe
+         *
+         * @param event an event instance
+         */
         template<class Event>
-        void process_event(Event const& e) {
+        void process_event(Event const& event) {
             static_assert(std::is_base_of<fsm, Derived>::value, "must derive from fsm");
             Derived* self = static_cast<Derived*>(this);
-            state = Derived::transition_table::process(self, state, e);
+            m_state = Derived::transition_table::execute(self, event, m_state);
         }
 
-        state_type current_state() const { return state; }
+        /**
+         * Return the state machine's current state.
+         */
+        state_type current_state() const { return m_state; }
 
     protected:
+        /**
+         * Called when no transition can be found for the current
+         * state with the given event.
+         *
+         * @tparam Event the event type
+         *
+         * @param event an event instance
+         */
         template<class Event>
-        state_type no_transition(state_type state, Event const&) {
-            return state;
+        state_type no_transition(Event const& event) {
+            return m_state;
         }
 
     private:
+        template<State Start, class Event, State Target>
+        struct row_base {
+            using state_type = State;
+            using event_type = Event;
+
+            static constexpr state_type start_value = Start;
+            static constexpr state_type target_value = Target;
+
+            static void process_event(Derived*, Event const&) {}
+
+            static constexpr bool check_guard(Derived const*, Event const&) {
+                return true;
+            }
+        };
+
         template<class Event, void (*action)(Derived&, Event const&)>
         struct make_fn_action {
             static constexpr bool valid = action != nullptr;
@@ -95,13 +148,15 @@ namespace fsmlite {
             using type = typename std::conditional<valid, make_fn_action, void>::type;
 
             void operator()(Derived& self, Event const& e) {
-                action(self, e);
+                action(self, e, e);
             }
         };
 
         template<class Event, bool (*guard)(Derived const&, Event const&)>
         struct make_fn_guard {
-            static constexpr bool valid = true;  // FIXME: guard != nullptr (gcc)
+            static constexpr auto value = guard;
+
+            static constexpr bool valid = true; //guard != nullptr; // (gcc)
 
             using type = typename std::conditional<valid, make_fn_guard, void>::type;
 
@@ -133,32 +188,34 @@ namespace fsmlite {
         };
 
     protected:
+        /**
+         * Transition table base class template.
+         *
+         * Every derived state machine class must define a
+         * non-template class `transition_table` derived from `table`.
+         */
         template<class... Rows>
         struct table {
             template<class Event>
-            static state_type process(Derived* self, state_type state, Event const& e) {
+            static state_type execute(Derived* self, Event const& event, State state) {
                 using rows = typename filter_by_event_type<Event, Rows...>::type;
-                return invoke<Event, rows>::execute(self, state, e);
+                return invoke<Event, rows>::execute(self, event, state);
             }
         };
 
-        template<State Start, class Event, State Target>
-        struct row_base {
-            using state_type = State;
-            using event_type = Event;
-
-            static constexpr state_type start_value = Start;
-            static constexpr state_type target_value = Target;
-
-            static constexpr state_type process(Derived*, state_type, Event const&) {
-                return target_value;
-            }
-
-            static constexpr bool check_guard(Derived const*, Event const&) {
-                return true;
-            }
-        };
-
+        /**
+         * Generic functor-based transition class template.
+         *
+         * @tparam Start the start state of the transition
+         *
+         * @tparam Event the event type triggering the transition
+         *
+         * @tparam Target the target state of the transition
+         *
+         * @tparam Action an action functor type, or `void` for no action
+         *
+         * @tparam Guard a guard functor type, or `void` for no guard
+         */
         template<
             State Start,
             class Event,
@@ -174,9 +231,8 @@ namespace fsmlite {
 
         template<State Start, class Event, State Target, class Action>
         struct row<Start, Event, Target, Action, void> : row_base<Start, Event, Target> {
-            static state_type process(Derived* self, state_type, Event const& e) {
-                Action()(*self, e);
-                return Target;
+            static void process_event(Derived* self, Event const& event) {
+                Action()(*self, event);
             }
         };
 
@@ -189,9 +245,8 @@ namespace fsmlite {
 
         template<State Start, class Event, State Target, class Action, class Guard>
         struct row : row_base<Start, Event, Target> {
-            static state_type process(Derived* self, state_type, Event const& e) {
-                Action()(*self, e);
-                return Target;
+            static void process_event(Derived* self, Event const& event) {
+                Action()(*self, event);
             }
 
             static bool check_guard(Derived const* self, Event const& e) {
@@ -199,6 +254,19 @@ namespace fsmlite {
             }
         };
 
+        /**
+         * Function-based transition class template.
+         *
+         * @tparam Start the start state of the transition
+         *
+         * @tparam Event the event type triggering the transition
+         *
+         * @tparam Target the target state of the transition
+         *
+         * @tparam action an action function
+         *
+         * @tparam auard a guard function type, or `nullptr` for no guard
+         */
         template<
             State Start,
             class Event,
@@ -212,6 +280,19 @@ namespace fsmlite {
             typename make_fn_guard<Event, guard>::type
         > {};
 
+        /**
+         * Member function-based transition class template.
+         *
+         * @tparam Start the start state of the transition
+         *
+         * @tparam Event the event type triggering the transition
+         *
+         * @tparam Target the target state of the transition
+         *
+         * @tparam action an action member function
+         *
+         * @tparam auard a guard member function, or `nullptr` for no guard
+         */
         template<
             State Start,
             class Event,
@@ -232,29 +313,29 @@ namespace fsmlite {
         template<class Event, class... Types>
         struct filter_by_event_type {
             template <class T> using predicate = has_event_type<T, Event>;
-            using type = typename traits::filter<predicate, Types...>::type;
+            using type = typename detail::filter<predicate, Types...>::type;
         };
 
         template<class Event, class...> struct invoke;
 
         template<class Event, class T, class... Types>
-        struct invoke<Event, traits::list<T, Types...>> {
-            static State execute(Derived* self, State state, Event const& event) {
-                return state == T::start_value && T::check_guard(self, event)
-                    ? T::process(self, state, event)
-                    : invoke<Event, traits::list<Types...>>::execute(self, state, event);
+        struct invoke<Event, detail::list<T, Types...>> {
+            static State execute(Derived* self, Event const& event, State state) {
+                return state == T::start_value && T::check_guard(self, event) ?
+                    T::process_event(self, event), T::target_value :
+                    invoke<Event, detail::list<Types...>>::execute(self, event, state);
             }
         };
 
         template<class Event>
-        struct invoke<Event, traits::list<>> {
-            static State execute(Derived* self, State state, Event const& e) {
-                return self->no_transition(state, e);
+        struct invoke<Event, detail::list<>> {
+            static State execute(Derived* self, Event const& event, State) {
+                return self->no_transition(event);
             }
         };
 
     private:
-        state_type state;
+        state_type m_state;
     };
 }
 
