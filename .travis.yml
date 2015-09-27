@@ -1,8 +1,21 @@
+sudo: false
+
 language: cpp
 
 compiler:
 - clang
-# - gcc  # travis uses gcc 4.6.3 which does not support C++11
+- gcc
+
+install:
+- if [ "$CXX" = "g++" ]; then export CXX="g++-4.9" CC="gcc-4.9"; $CXX --version; fi
+
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-4.9
+    - g++-4.9
 
 before_script:
 - sh autogen.sh
