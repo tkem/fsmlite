@@ -5,3 +5,4 @@ test_notrans
 test_player
 test_rows
 test_scoped
+test_traits

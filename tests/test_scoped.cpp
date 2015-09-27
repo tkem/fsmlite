@@ -11,12 +11,12 @@ public:
     struct event {};
 
 private:
-    struct transition_table: table<
+    using transition_table = table<
 //       Start        Event  Target
 //  ----+------------+------+-----------+--
     row< State::Init, event, State::Exit >
 //  ----+------------+------+-----------+--
-    > {};
+    >;
 
     static_assert(std::is_same<state_type, State>::value,
                   "state_machine::state_type == State");

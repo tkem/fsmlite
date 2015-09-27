@@ -38,7 +38,7 @@ private:
     void resume_playback(play const&);
 
 private:
-    struct transition_table: table<
+    using transition_table = table<
 //              Start    Event        Target   Action
 //  -----------+--------+------------+--------+------------------------+--
     mem_fn_row< Stopped, play,        Playing, &player::start_playback  >,
@@ -53,7 +53,7 @@ private:
     mem_fn_row< Paused,  stop,        Stopped, &player::stop_playback   >,
     mem_fn_row< Paused,  open_close,  Open,    &player::stop_and_open   >
 //  -----------+--------+------------+--------+------------------------+--
-    > {};
+    >;
 };
 ```
 

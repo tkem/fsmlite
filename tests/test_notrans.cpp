@@ -22,12 +22,12 @@ private:
     }
 
 private:
-    struct transition_table: table<
+    using transition_table = table<
 //       Start Event  Target
 //  ----+-----+------+------+--
     row< Init, event, Exit   >
 //  ----+-----+------+------+--
-    > {};
+    >;
 };
 
 int main()

@@ -37,7 +37,7 @@ private:
     typedef state_machine m;
 
 private:
-    struct transition_table: table<
+    using transition_table = table<
 //       Start    Event  Target   Action     Guard
 //  ----+--------+------+--------+----------+----------+--
     row< Init,    event, Running, m::action             >,
@@ -45,7 +45,7 @@ private:
     row< Running, event, Exit,    void,      m::is_odd  >,
     row< Exit,    event, Exit                           >
 //  ----+--------+------+--------+----------+----------+--
-    > {};
+    >;
 };
 
 

@@ -25,7 +25,7 @@ private:
 private:
     typedef state_machine m;
 
-    struct transition_table: table<
+    using transition_table = table<
 //              Start Event  Target Action   Guard
 //  -----------+-----+------+------+--------+--------------+--
     mem_fn_row< Init, event, Even,  nullptr, &m::is_even    >,
@@ -35,7 +35,7 @@ private:
     mem_fn_row< Odd,  event, Even,  nullptr, &m::is_even    >,
     mem_fn_row< Odd,  event, Odd,   nullptr  /* fallback */ >
 //  -----------+-----+------+------+--------+--------------+--
-    > {};
+    >;
 };
 
 void test_even()
