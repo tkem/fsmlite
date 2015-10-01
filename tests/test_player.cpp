@@ -33,7 +33,7 @@ private:
 private:
     using transition_table = table<
 //              Start    Event        Target   Action
-//  -----------+--------+------------+--------+------------------------+--
+//  -----------+--------+------------+--------+------------------------+-
     mem_fn_row< Stopped, play,        Playing, &player::start_playback  >,
     mem_fn_row< Stopped, open_close,  Open,    &player::open_drawer     >,
     mem_fn_row< Open,    open_close,  Empty,   &player::close_drawer    >,
@@ -45,7 +45,7 @@ private:
     mem_fn_row< Paused,  play,        Playing, &player::resume_playback >,
     mem_fn_row< Paused,  stop,        Stopped, &player::stop_playback   >,
     mem_fn_row< Paused,  open_close,  Open,    &player::stop_and_open   >
-//  -----------+--------+------------+--------+------------------------+--
+//  -----------+--------+------------+--------+------------------------+-
     >;
 };
 

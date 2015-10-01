@@ -26,21 +26,45 @@ void test_filter()
 void test_is_callable()
 {
     struct foo {
+        void operator()();
         void operator()(int);
         void operator()(char*);
     };
 
+    assert((is_callable<foo>::value));
     assert((is_callable<foo, int>::value));
     assert((is_callable<foo, int&>::value));
     assert((is_callable<foo, int const&>::value));
     assert((is_callable<foo, long>::value));
     assert((is_callable<foo, char*>::value));
 
-    assert((!is_callable<foo>::value));
     assert((!is_callable<foo, int*>::value));
     assert((!is_callable<foo, char const*>::value));
     assert((!is_callable<foo, void*>::value));
     assert((!is_callable<foo, int, char*>::value));
+}
+
+void test_is_callable_fn()
+{
+    void foo();
+    int bar(int);
+
+    assert((is_callable<decltype(foo)>::value));
+    assert((!is_callable<decltype(foo), int>::value));
+    assert((!is_callable<decltype(foo), int&>::value));
+    assert((!is_callable<decltype(foo), int const&>::value));
+    assert((!is_callable<decltype(foo), long>::value));
+    assert((!is_callable<decltype(foo), int*>::value));
+    assert((!is_callable<decltype(foo), char const*>::value));
+
+
+    assert((!is_callable<decltype(bar)>::value));
+    assert((is_callable<decltype(bar), int>::value));
+    assert((is_callable<decltype(bar), int&>::value));
+    assert((is_callable<decltype(bar), int const&>::value));
+    assert((is_callable<decltype(bar), long>::value));
+    assert((!is_callable<decltype(bar), int*>::value));
+    assert((!is_callable<decltype(bar), char const*>::value));
 }
 
 int main()
@@ -48,5 +72,6 @@ int main()
     test_concat();
     test_filter();
     test_is_callable();
+    test_is_callable_fn();
     return 0;
 }

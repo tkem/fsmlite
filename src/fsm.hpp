@@ -28,20 +28,35 @@
 #include <type_traits>
 
 namespace fsmlite {
-
     namespace detail {
-
-        /* std::declval is in <utility>, which may not be available
-           with freestanding implementations */
-        template <class T>
-        typename std::add_rvalue_reference<T>::type declval();
-
-        /* from C++17 */
+        // from C++17
         template <bool B>
         using bool_constant = std::integral_constant<bool, B>;
 
+        template<class T>
+        using result_of_t = typename std::result_of<T>::type;
+
+        // similar to std::is_constructible
+        struct is_callable_test {
+            struct no_type { int a; int b; };
+
+            template<class T, class... Args, class = result_of_t<T(Args...)>>
+            static char test(int);
+
+            template<class, class...>
+            static no_type test(...);
+        };
+
+        template<class T, class... Args>
+        using is_callable = typename std::conditional<
+            std::is_function<T>::value,
+            bool_constant<sizeof(is_callable_test::test<T*, Args...>(0)) == 1>,
+            bool_constant<sizeof(is_callable_test::test<T, Args...>(0)) == 1>
+        >::type;
+
+        // basic mpl-like stuff
         template<class...> struct list {
-            using type = list;
+            using type = list;  // self-referential
         };
 
         template<class...> struct concat;
@@ -73,21 +88,50 @@ namespace fsmlite {
             using type = list<>;
         };
 
-        struct is_callable_test {
-            struct false_type { int a; int b; };
+        // use any of fn(), fn(arg1), fn(arg2), fn(arg1, arg2)
+        template<
+            class T, T* fn, class Arg1, class Arg2,
+            bool f1 = is_callable<T>::value,
+            bool f2 = is_callable<T, Arg1>::value,
+            bool f3 = is_callable<T, Arg2>::value,
+            bool f4 = is_callable<T, Arg1, Arg2>::value
+        > struct make_binary_function;
 
-            template<class T, class... Args,
-                     class = typename std::result_of<T(Args...)>::type>
-            static char test(int);
-
-            template<class, class...>
-            static false_type test(...);
+        template<class T, T* fn, class Arg1, class Arg2>
+        struct make_binary_function<T, fn, Arg1, Arg2, true, false, false, false> {
+            static struct type {
+                result_of_t<T()> operator()(Arg1, Arg2) const {
+                    return (*fn)();
+                }
+            } value;
         };
 
-        template<class T, class... Args>
-        struct is_callable: public bool_constant<
-            sizeof(is_callable_test::test<T, Args...>(0)) == 1
-        >{};
+        template<class T, T* fn, class Arg1, class Arg2>
+        struct make_binary_function<T, fn, Arg1, Arg2, false, true, false, false> {
+            static struct type {
+                result_of_t<T(Arg1)> operator()(Arg1 arg1, Arg2) const {
+                    return (*fn)(arg1);
+                }
+            } value;
+        };
+
+        template<class T, T* fn, class Arg1, class Arg2>
+        struct make_binary_function<T, fn, Arg1, Arg2, false, false, true, false> {
+            static struct type {
+                result_of_t<T(Arg2)> operator()(Arg1, Arg2 arg2) const {
+                    return (*fn)(arg2);
+                }
+            } value;
+        };
+
+        template<class T, T* fn, class Arg1, class Arg2>
+        struct make_binary_function<T, fn, Arg1, Arg2, false, false, false, true> {
+            static struct type {
+                result_of_t<T(Arg1, Arg2)> operator()(Arg1 arg1, Arg2 arg2) const {
+                    return (*fn)(arg1, arg2);
+                }
+            } value;
+        };
     }
 
     /**
@@ -95,26 +139,26 @@ namespace fsmlite {
      *
      * @tparam Derived the derived state machine class
      *
-     * @tparam State the state type to use, defaults to `int`
+     * @tparam State the FSM's state type, defaults to `int`
      */
     template<class Derived, class State = int>
     class fsm {
     public:
         /**
-         * The state machine's state type.
+         * The FSM's state type.
          */
         typedef State state_type;
 
     public:
         /**
-         * Create a state machine with a default initial state.
+         * Create a state machine with default initial state.
          */
         fsm() : m_state() {}
 
         /**
          * Create a state machine with a custom initial state.
          *
-         * @param init_state the state machine's initial state
+         * @param init_state the FSM's initial state
          */
         fsm(state_type init_state) : m_state(init_state) {}
 
@@ -123,13 +167,13 @@ namespace fsmlite {
          *
          * @tparam Event the event tyoe
          *
-         * @param event an event instance
+         * @param event the event instance
          */
         template<class Event>
         void process_event(Event const& event) {
             static_assert(std::is_base_of<fsm, Derived>::value, "must derive from fsm");
             Derived* self = static_cast<Derived*>(this);
-            m_state = Derived::transition_table::execute(self, event, m_state);
+            m_state = Derived::transition_table::execute(*self, event, m_state);
         }
 
         /**
@@ -139,12 +183,17 @@ namespace fsmlite {
 
     protected:
         /**
-         * Called when no transition can be found for the current
-         * state with the given event.
+         * Called when no transition can be found for the given event
+         * in the current state.  Derived state machines may override
+         * this to throw an exception, or change to some other (error)
+         * state.  The default is to return the current state, so no
+         * state change occurs.
          *
          * @tparam Event the event type
          *
-         * @param event an event instance
+         * @param event the event instance
+         *
+         * @return the FSM's new state
          */
         template<class Event>
         state_type no_transition(Event const& event) {
@@ -152,284 +201,179 @@ namespace fsmlite {
         }
 
     private:
-        template<State Start, class Event, State Target>
-        struct row_base {
-            using state_type = State;
-            using event_type = Event;
-
-            static constexpr state_type start_value = Start;
-            static constexpr state_type target_value = Target;
-
-            static void process_event(Derived*, Event const&) {}
-
-            static bool check_guard(Derived const*, Event const&) {
-                return true;
-            }
-        };
-
-        template<State Start, class Event, State Target, class Action = void, class Guard = void>
-        struct basic_row;
-
-        template<State Start, class Event, State Target>
-        struct basic_row<Start, Event, Target, void, void>: row_base<Start, Event, Target> {};
-
-        template<State Start, class Event, State Target, class Action>
-        struct basic_row<Start, Event, Target, Action, void>: row_base<Start, Event, Target> {
-            static void process_event(Derived* self, Event const& event) {
-                Action()(*self, event);
-            }
-        };
-
-        template<State Start, class Event, State Target, class Guard>
-        struct basic_row<Start, Event, Target, void, Guard>: row_base<Start, Event, Target> {
-            static bool check_guard(Derived const* self, Event const& e) {
-                return Guard()(*self, e);
-            }
-        };
-
-        template<State Start, class Event, State Target, class Action, class Guard>
-        struct basic_row: public row_base<Start, Event, Target> {
-            static void process_event(Derived* self, Event const& event) {
-                Action()(*self, event);
-            }
-
-            static bool check_guard(Derived const* self, Event const& e) {
-                return Guard()(*self, e);
-            }
-        };
-
-        template<class Action, class Event>
-        struct make_action {
-            struct action1 {
-                void operator()(Derived& self, Event const& event) const {
-                    Action()(self, event);
-                }
-            };
-
-            struct action2 {
-                void operator()(Derived& self, Event const&) const {
-                    Action()(self);
-                }
-            };
-
-            struct action3 {
-                void operator()(Derived&, Event const& event) const {
-                    Action()(event);
-                }
-            };
-
-            struct action4 {
-                void operator()(Derived&, Event const&) const {
-                    Action()();
-                }
-            };
-
-            using type = typename std::conditional<
-                detail::is_callable<Action, Derived&, Event const&>::value,
-                action1,
-                typename std::conditional<
-                    detail::is_callable<Action, Derived&>::value,
-                    action2,
-                    typename std::conditional<
-                        detail::is_callable<Action, Event&>::value,
-                        action3,
-                        action4  // TODO: error?
-                    >::type
-                >::type
-            >::type;
+        template<class Event>
+        struct no_action {
+            static struct type {
+                void operator()(Derived&, Event const&) const {}
+            } value;
         };
 
         template<class Event>
-        struct make_action<void, Event> {
-            using type = void;
-        };
-
-        template<class Guard, class Event>
-        struct make_guard {
-            struct guard1 {
-                bool operator()(Derived const& self, Event const& event) const {
-                    return Guard()(self, event);
-                }
-            };
-
-            struct guard2 {
-                bool operator()(Derived const& self, Event const&) const {
-                    return Guard()(self);
-                }
-            };
-
-            struct guard3 {
-                bool operator()(Derived const&, Event const& event) const {
-                    return Guard()(event);
-                }
-            };
-
-            struct guard4 {
+        struct no_guard {
+            static struct type {
                 bool operator()(Derived const&, Event const&) const {
-                    return Guard()();
+                    return true;
                 }
-            };
-
-            using type = typename std::conditional<
-                detail::is_callable<Guard, Derived const&, Event const&>::value,
-                guard1,
-                typename std::conditional<
-                    detail::is_callable<Guard, Derived const&>::value,
-                    guard2,
-                    typename std::conditional<
-                        detail::is_callable<Guard, Event const&>::value,
-                        guard3,
-                        guard4  // TODO: error?
-                    >::type
-                >::type
-            >::type;
-        };
-
-        template<class Event>
-        struct make_guard<void, Event> {
-            using type = void;
-        };
-
-        template<class Event, void (*action)(Derived&, Event const&)>
-        struct make_fn_action {
-            struct fn_action {
-                void operator()(Derived& self, Event const& event) const {
-                    action(self, event);
-                }
-            };
-
-            using type = typename std::conditional<action != nullptr, fn_action, void>::type;
-        };
-
-        template<class Event, bool (*guard)(Derived const&, Event const&)>
-        struct make_fn_guard {
-            struct mem_fn_guard {
-                bool operator()(Derived const& self, Event const& event) const {
-                    return guard != nullptr ? guard(self, event) : true;
-                }
-            };
-
-            // g++ 4.8 error: ‘(foo::bar != 0u)’ is not a constant expression
-            //using type = typename std::conditional<guard != nullptr, mem_fn_guard, void>::type;
-            using type = mem_fn_guard;
+            } value;
         };
 
         template<class Event, void (Derived::*action)(Event const&)>
-        struct make_mem_fn_action {
-            struct mem_fn_action {
+        struct mem_fn_action {
+            static struct type {
                 void operator()(Derived& self, Event const& event) const {
                     (self.*action)(event);
                 }
-            };
-
-            using type = typename std::conditional<action != nullptr, mem_fn_action, void>::type;
+            } value;
         };
 
         template<class Event, bool (Derived::*guard)(Event const&) const>
-        struct make_mem_fn_guard {
-            struct mem_fn_guard {
+        struct mem_fn_guard {
+            static struct type {
                 bool operator()(Derived const& self, Event const& event) const {
-                    return guard != nullptr ? (self.*guard)(event) : true;
+                    return (self.*guard)(event);
                 }
-            };
+            } value;
+        };
 
-            // g++ 4.8 error: ‘(foo::bar != 0u)’ is not a constant expression
-            //using type = typename std::conditional<guard != nullptr, mem_fn_guard, void>::type;
-            using type = mem_fn_guard;
+        template<class Event, class T, T* fn>
+        using make_action = typename std::conditional<
+            !std::is_void<T>::value,
+            detail::make_binary_function<T, fn, Derived&, Event const&>,
+            no_action<Event>
+        >::type;
+
+        template<class Event, class T, T* fn>
+        using make_guard = typename std::conditional<
+            !std::is_void<T>::value,
+            detail::make_binary_function<T, fn, Derived const&, Event const&>,
+            no_guard<Event>
+        >::type;
+
+        template<class Event, void (Derived::*action)(Event const&)>
+        using make_mem_fn_action = typename std::conditional<
+            action != nullptr,
+            mem_fn_action<Event, action>,
+            no_action<Event>
+            >::type;
+
+        /* FIXME g++-4.8.4: ‘(guard != nullptr)’ is not a constant expression
+        template<class Event, bool (Derived::*guard)(Event const&) const>
+        using make_mem_fn_guard = typename std::conditional<
+            guard != nullptr,
+            mem_fn_guard<Event, guard>,
+            no_guard<Event>
+            >::type;
+        */
+        template<class Event, bool (Derived::*guard)(Event const&) const>
+        struct make_mem_fn_guard {
+            static struct type {
+                bool operator()(Derived const& self, Event const& event) const {
+                    return guard ? (self.*guard)(event) : true;
+                }
+            } value;
+        };
+
+        template<
+            State start,
+            class Event,
+            State target,
+            class Action,
+            Action* action,
+            class Guard,
+            Guard* guard
+        >
+        struct basic_row {
+            using state_type = State;
+            using event_type = Event;
+
+            static constexpr state_type start_value = start;
+            static constexpr state_type target_value = target;
+
+            static void process_event(Derived& self, Event const& event) {
+                (*action)(self, event);
+            }
+
+            static bool check_guard(Derived const& self, Event const& e) {
+                return (*guard)(self, e);
+            }
         };
 
     protected:
         /**
          * Transition table base class template.
          *
-         * Every derived state machine class must define a
+         * Each derived state machine class must define a nested
          * non-template class `transition_table` derived from `table`.
          */
         template<class... Rows>
         struct table {
             template<class Event>
-            static state_type execute(Derived* self, Event const& event, State state) {
+            static state_type execute(Derived& self, Event const& event, State state) {
                 using rows = typename filter_by_event_type<Event, Rows...>::type;
                 return invoke<Event, rows>::execute(self, event, state);
             }
         };
 
         /**
-         * Generic functor-based transition class template.
+         * Generic transition class template.
          *
-         * @tparam Start the start state of the transition
+         * @tparam start the start state of the transition
          *
          * @tparam Event the event type triggering the transition
          *
-         * @tparam Target the target state of the transition
+         * @tparam target the target state of the transition
          *
-         * @tparam Action an action functor type, or `void` for no action
+         * @tparam Action an action functor type, or `void`
          *
-         * @tparam Guard a guard functor type, or `void` for no guard
+         * @tparam action a pointer to an `Action` instance
+         *
+         * @tparam Guard a guard functor type, or `void`
+         *
+         * @tparam guard a pointer to a `Guard` instance
          */
         template<
-            State Start,
+            State start,
             class Event,
-            State Target,
+            State target,
             class Action = void,
-            class Guard = void
+            Action* action = nullptr,
+            class Guard = void,
+            Guard* guard = nullptr
         >
         struct row: basic_row<
-            Start, Event, Target,
-            typename make_action<Action, Event>::type,
-            typename make_guard<Guard, Event>::type
-            > {};
-
-        /**
-         * Function-based transition class template.
-         *
-         * @tparam Start the start state of the transition
-         *
-         * @tparam Event the event type triggering the transition
-         *
-         * @tparam Target the target state of the transition
-         *
-         * @tparam action an action function
-         *
-         * @tparam guard a guard function, or `nullptr` for no guard
-         */
-        template<
-            State Start,
-            class Event,
-            State Target,
-            void (*action)(Derived&, Event const&),
-            bool (*guard)(Derived const&, Event const&) = nullptr
-        >
-        struct fn_row: basic_row<
-            Start, Event, Target,
-            typename make_fn_action<Event, action>::type,
-            typename make_fn_guard<Event, guard>::type
+            start, Event, target,
+            typename make_action<Event, Action, action>::type,
+            &make_action<Event, Action, action>::value,
+            typename make_guard<Event, Guard, guard>::type,
+            &make_guard<Event, Guard, guard>::value
         > {};
 
         /**
-         * Member function-based transition class template.
+         * Member function transition class template.
          *
-         * @tparam Start the start state of the transition
+         * @tparam start the start state of the transition
          *
          * @tparam Event the event type triggering the transition
          *
-         * @tparam Target the target state of the transition
+         * @tparam target the target state of the transition
          *
          * @tparam action an action member function
          *
-         * @tparam guard a guard member function, or `nullptr` for no guard
+         * @tparam guard a guard member function, or `nullptr`
          */
         template<
-            State Start,
+            State start,
             class Event,
-            State Target,
+            State target,
             void (Derived::*action)(Event const&),
             bool (Derived::*guard)(Event const&) const = nullptr
         >
         struct mem_fn_row: basic_row<
-            Start, Event, Target,
+            start, Event, target,
             typename make_mem_fn_action<Event, action>::type,
-            typename make_mem_fn_guard<Event, guard>::type
+            &make_mem_fn_action<Event, action>::value,
+            typename make_mem_fn_guard<Event, guard>::type,
+            &make_mem_fn_guard<Event, guard>::value
         > {};
 
     private:
@@ -446,7 +390,7 @@ namespace fsmlite {
 
         template<class Event, class T, class... Types>
         struct invoke<Event, detail::list<T, Types...>> {
-            static State execute(Derived* self, Event const& event, State state) {
+            static State execute(Derived& self, Event const& event, State state) {
                 return state == T::start_value && T::check_guard(self, event) ?
                     T::process_event(self, event), T::target_value :
                     invoke<Event, detail::list<Types...>>::execute(self, event, state);
@@ -455,8 +399,8 @@ namespace fsmlite {
 
         template<class Event>
         struct invoke<Event, detail::list<>> {
-            static State execute(Derived* self, Event const& event, State) {
-                return self->no_transition(event);
+            static State execute(Derived& self, Event const& event, State) {
+                return self.no_transition(event);
             }
         };
 
