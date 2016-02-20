@@ -8,9 +8,9 @@ if os.environ.get('READTHEDOCS', None) == 'True':
 # TODO: extract from autoconf?
 project = 'fsmlite'
 author = 'Thomas Kemmer'
-version = '0.1'
-release = '0.1.0'
-copyright = '%d, %s' % (2015, author)
+version = '0.2'
+release = '0.2.0'
+copyright = '%s, %s' % ('2015, 2016', author)
 
 master_doc = 'index'
 
