@@ -1,17 +1,20 @@
 # Makefile for Sphinx documentation
 
-SPHINXOPTS    =
-SPHINXBUILD   = sphinx-build
-PAPER         =
-BUILDDIR      = build
-DOXYGEN       = doxygen
+EXTRA_DIST = Doxyfile conf.py index.rst requirements.txt
+
+# TODO: detect programs by autoconf
+BUILDDIR = build
+DOXYGEN = doxygen
+PAPER =
+SPHINXBUILD = sphinx-build
+SPHINXOPTS =
 
 # Internal variables.
-PAPEROPT_a4     = -D latex_paper_size=a4
+PAPEROPT_a4 = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
-ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
+ALLSPHINXOPTS  = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 # the i18n builder cannot share the environment and doctrees with the others
-I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
+I18NSPHINXOPTS = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
 clean-local:
 	rm -rf $(BUILDDIR) doxyxml
