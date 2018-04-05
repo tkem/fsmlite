@@ -9,8 +9,8 @@ if os.environ.get('READTHEDOCS', None) == 'True':
 project = 'fsmlite'
 author = 'Thomas Kemmer'
 version = '0.2'
-release = '0.2.0'
-copyright = '%s, %s' % ('2015, 2016', author)
+release = '0.2.1'
+copyright = '%s, %s' % ('2015-2018', author)
 
 master_doc = 'index'
 
