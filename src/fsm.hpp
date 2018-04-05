@@ -279,12 +279,14 @@ namespace fsmlite {
             no_guard<Event>
         >::type;
 
+        /* FIXME g++-6: ‘(action != nullptr)’ is not a constant expression
         template<class Event, void (Derived::*action)(Event const&)>
         using make_mem_fn_action = typename std::conditional<
             action != nullptr,
             mem_fn_action<Event, action>,
             no_action<Event>
             >::type;
+        */
 
         /* FIXME g++-4.8.4: ‘(guard != nullptr)’ is not a constant expression
         template<class Event, bool (Derived::*guard)(Event const&) const>
@@ -294,6 +296,16 @@ namespace fsmlite {
             no_guard<Event>
             >::type;
         */
+
+        template<class Event, void (Derived::*action)(Event const&)>
+        struct make_mem_fn_action_type {
+            void operator()(Derived& self, Event const& event) {
+                if (action) (self.*action)(event);
+            }
+        };
+
+        template<class Event, void (Derived::*action)(Event const&)>
+        struct make_mem_fn_action: detail::typed_value<make_mem_fn_action_type<Event, action>> {};
 
         template<class Event, bool (Derived::*guard)(Event const&) const>
         struct make_mem_fn_guard_type {
