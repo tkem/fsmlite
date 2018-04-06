@@ -2,7 +2,7 @@
 #include <functional>
 #include <iostream>
 
-#include "fsm.hpp"
+#include "fsm.h"
 
 using namespace std::placeholders;
 

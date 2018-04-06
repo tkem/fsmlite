@@ -9,7 +9,7 @@ Unsurprisingly, the canonical CD player example looks somewhat like
 this:
 
 ```C++
-#include <fsmlite/fsm.hpp>
+#include <fsmlite/fsm.h>
 
 class player: public fsmlite::fsm<player> {
     friend class fsm;  // base class needs access to transition_table

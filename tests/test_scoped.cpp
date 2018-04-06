@@ -1,7 +1,7 @@
 #include <cassert>
 #include <type_traits>
 
-#include "fsm.hpp"
+#include "fsm.h"
 
 enum class State { Init, Exit };
 

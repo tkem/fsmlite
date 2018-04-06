@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 
-#include "fsm.hpp"
+#include "fsm.h"
 
 class player: public fsmlite::fsm<player> {
     friend class fsm;  // base class needs access to transition_table
