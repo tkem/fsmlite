@@ -14,21 +14,21 @@ public:
     struct play {};
     struct open_close {};
     struct cd_detected {
-        cd_detected(char const* s = "") : title(s) { }
+        cd_detected(const char* s = "") : title(s) { }
         std::string title;
     };
     struct stop {};
     struct pause {};
 
 private:
-    void start_playback(play const&);
-    void open_drawer(open_close const&);
-    void close_drawer(open_close const&);
-    void store_cd_info(cd_detected const& cd);
-    void stop_playback(stop const&);
-    void pause_playback(pause const&);
-    void stop_and_open(open_close const&);
-    void resume_playback(play const&);
+    void start_playback(const play&);
+    void open_drawer(const open_close&);
+    void close_drawer(const open_close&);
+    void store_cd_info(const cd_detected& cd);
+    void stop_playback(const stop&);
+    void pause_playback(const pause&);
+    void stop_and_open(const open_close&);
+    void resume_playback(const play&);
 
 private:
     using transition_table = table<
@@ -49,35 +49,35 @@ private:
     >;
 };
 
-void player::start_playback(play const&) {
+void player::start_playback(const play&) {
     std::cout << "Starting playback\n";
 }
 
-void player::open_drawer(open_close const&) {
+void player::open_drawer(const open_close&) {
     std::cout << "Opening drawer\n";
 }
 
-void player::close_drawer(open_close const&) {
+void player::close_drawer(const open_close&) {
     std::cout << "Closing drawer\n";
 }
 
-void player::store_cd_info(cd_detected const& cd) {
+void player::store_cd_info(const cd_detected& cd) {
     std::cout << "Detected CD '" << cd.title << "'\n";
 }
 
-void player::stop_playback(stop const&) {
+void player::stop_playback(const stop&) {
     std::cout << "Stopping playback\n";
 }
 
-void player::pause_playback(pause const&) {
+void player::pause_playback(const pause&) {
     std::cout << "Pausing playback\n";
 }
 
-void player::stop_and_open(open_close const&) {
+void player::stop_and_open(const open_close&) {
     std::cout << "Stopping and opening drawer\n";
 }
 
-void player::resume_playback(play const&) {
+void player::resume_playback(const play&) {
     std::cout << "Resuming playback\n";
 }
 

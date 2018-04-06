@@ -22,7 +22,7 @@ public:
     typedef int event;
 
 private:
-    static bool is_done(state_machine const& sm) {
+    static bool is_done(const state_machine& sm) {
         return false;
     }
 

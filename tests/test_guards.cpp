@@ -11,11 +11,11 @@ public:
     typedef int event;
 
 private:
-    bool is_even(event const& e) const {
+    bool is_even(const event& e) const {
         return e % 2 == 0;
     }
 
-    bool is_odd(event const& e) const {
+    bool is_odd(const event& e) const {
         return e % 2 != 0;
     }
 

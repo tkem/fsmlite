@@ -13,11 +13,11 @@ public:
 
 private:
     template<class Event>
-    state_type no_transition(Event const&) {
+    state_type no_transition(const Event&) {
         return Error;
     }
 
-    state_type no_transition(reset const&) {
+    state_type no_transition(const reset&) {
         return Init;
     }
 

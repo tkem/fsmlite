@@ -21,21 +21,21 @@ public:
     struct play {};
     struct open_close {};
     struct cd_detected {
-        cd_detected(char const* s = "") : title(s) { }
+        cd_detected(const char* s = "") : title(s) { }
         std::string title;
     };
     struct stop {};
     struct pause {};
 
 private:
-    void start_playback(play const&);
-    void open_drawer(open_close const&);
-    void close_drawer(open_close const&);
-    void store_cd_info(cd_detected const& cd);
-    void stop_playback(stop const&);
-    void pause_playback(pause const&);
-    void stop_and_open(open_close const&);
-    void resume_playback(play const&);
+    void start_playback(const play&);
+    void open_drawer(const open_close&);
+    void close_drawer(const open_close&);
+    void store_cd_info(const cd_detected& cd);
+    void stop_playback(const stop&);
+    void pause_playback(const pause&);
+    void stop_and_open(const open_close&);
+    void resume_playback(const play&);
 
 private:
     using transition_table = table<

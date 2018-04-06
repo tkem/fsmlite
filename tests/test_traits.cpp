@@ -34,12 +34,12 @@ void test_is_callable()
     assert((is_callable<foo>::value));
     assert((is_callable<foo, int>::value));
     assert((is_callable<foo, int&>::value));
-    assert((is_callable<foo, int const&>::value));
+    assert((is_callable<foo, const int&>::value));
     assert((is_callable<foo, long>::value));
     assert((is_callable<foo, char*>::value));
 
     assert((!is_callable<foo, int*>::value));
-    assert((!is_callable<foo, char const*>::value));
+    assert((!is_callable<foo, const char*>::value));
     assert((!is_callable<foo, void*>::value));
     assert((!is_callable<foo, int, char*>::value));
 }
@@ -52,19 +52,19 @@ void test_is_callable_fn()
     assert((is_callable<decltype(foo)>::value));
     assert((!is_callable<decltype(foo), int>::value));
     assert((!is_callable<decltype(foo), int&>::value));
-    assert((!is_callable<decltype(foo), int const&>::value));
+    assert((!is_callable<decltype(foo), const int&>::value));
     assert((!is_callable<decltype(foo), long>::value));
     assert((!is_callable<decltype(foo), int*>::value));
-    assert((!is_callable<decltype(foo), char const*>::value));
+    assert((!is_callable<decltype(foo), const char*>::value));
 
 
     assert((!is_callable<decltype(bar)>::value));
     assert((is_callable<decltype(bar), int>::value));
     assert((is_callable<decltype(bar), int&>::value));
-    assert((is_callable<decltype(bar), int const&>::value));
+    assert((is_callable<decltype(bar), const int&>::value));
     assert((is_callable<decltype(bar), long>::value));
     assert((!is_callable<decltype(bar), int*>::value));
-    assert((!is_callable<decltype(bar), char const*>::value));
+    assert((!is_callable<decltype(bar), const char*>::value));
 }
 
 int main()
