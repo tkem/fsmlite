@@ -1,5 +1,12 @@
 import os
 
+def get_version(filename):
+    from re import findall
+    with open(filename) as f:
+        versions = dict(findall(r'AC_INIT\(\[(.*?)\],\s*\[(.*?)\].*\)', f.read()))
+    return versions['fsmlite']
+
+
 # https://github.com/rtfd/readthedocs.org/issues/388
 if os.environ.get('READTHEDOCS', None) == 'True':
   from subprocess import call
@@ -8,8 +15,8 @@ if os.environ.get('READTHEDOCS', None) == 'True':
 # TODO: extract from autoconf?
 project = 'fsmlite'
 author = 'Thomas Kemmer'
-version = '0.2'
-release = '0.2.1'
+version = get_version(b'../configure.ac')
+release = version
 copyright = '%s, %s' % ('2015-2018', author)
 
 master_doc = 'index'

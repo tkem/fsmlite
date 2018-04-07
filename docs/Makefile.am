@@ -2,11 +2,8 @@
 
 EXTRA_DIST = Doxyfile conf.py index.rst requirements.txt
 
-# TODO: detect programs by autoconf
 BUILDDIR = build
-DOXYGEN = doxygen
 PAPER =
-SPHINXBUILD = sphinx-build
 SPHINXOPTS =
 
 # Internal variables.
