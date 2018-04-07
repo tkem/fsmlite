@@ -1,12 +1,11 @@
-**fsmlite** is a lightweight finite state machine framework for C++11.
+# fsmlite [![Build Status](https://travis-ci.org/tkem/fsmlite.svg?branch=master)](https://travis-ci.org/tkem/fsmlite/) [![Documentation Status](https://readthedocs.org/projects/fsmlite/badge/?version=latest&style=flat)](http://fsmlite.readthedocs.io/en/latest/)
 
-Like many other C++ state machine implementations, **fsmlite** is
-based on concepts first presented by David Abrahams and Aleksey
+**fsmlite** is a lightweight finite state machine framework for C++11.
+It is based on concepts first presented by David Abrahams and Aleksey
 Gurtovoy in [C++ Template Metaprogramming][1], with additional ideas
 taken liberally from Boost's [Meta State Machine][2] (MSM).
 
-Unsurprisingly, the canonical CD player example looks somewhat like
-this:
+The canonical CD player example looks somewhat like this:
 
 ```C++
 #include <fsmlite/fsm.h>
@@ -60,7 +59,14 @@ private:
 [Documentation][3] is in the works.  In the mean time, please have a
 look at the [unit tests][4] for example usage.
 
+## License
+
+Copyright (c) 2015-2018 Thomas Kemmer
+
+Licensed under the [MIT License (MIT)][5].
+
 [1]: http://www.informit.com/store/c-plus-plus-template-metaprogramming-concepts-tools-9780321227256
 [2]: http://www.boost.org/doc/libs/1_59_0/libs/msm/doc/HTML/index.html
 [3]: http://fsmlite.readthedocs.org/en/latest/
 [4]: https://github.com/tkem/fsmlite/tree/master/tests
+[5]: https://github.com/tkem/fsmlite/tree/master/LICENSE
