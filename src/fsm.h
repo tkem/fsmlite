@@ -30,7 +30,7 @@
 namespace fsmlite {
     namespace detail {
         // from C++17
-        template <bool B>
+        template<bool B>
         using bool_constant = std::integral_constant<bool, B>;
 
         template<class T>
@@ -64,10 +64,10 @@ namespace fsmlite {
             bool_constant<sizeof(is_callable_test::test<T, Args...>(0)) == 1>
         >::type;
 
-        // basic mpl-like stuff
-        template<class...> struct list {
-            using type = list;  // self-referential
-        };
+        // basic template metaprogramming stuff; note that we could
+        // use std::tuple instead of list, but std::tuple is not
+        // required to be available on freestanding implementations
+        template<class...> struct list {};
 
         template<class...> struct concat;
 
@@ -198,8 +198,9 @@ namespace fsmlite {
         template<class Event>
         void process_event(const Event& event) {
             static_assert(std::is_base_of<fsm, Derived>::value, "must derive from fsm");
-            Derived* self = static_cast<Derived*>(this);
-            m_state = Derived::transition_table::execute(*self, event, m_state);
+            Derived& self = static_cast<Derived&>(*this);
+            using rows = typename by_event_type<Event, typename Derived::transition_table>::type;
+            m_state = handle_event<Event, rows>::execute(self, event, m_state);
         }
 
         /**
@@ -344,19 +345,13 @@ namespace fsmlite {
 
     protected:
         /**
-         * Transition table base class template.
+         * Transition table variadic class template.
          *
          * Each derived state machine class must define a nested
-         * non-template class `transition_table` derived from `table`.
+         * non-template type `transition_table` that's either derived
+         * from or a type alias of `table`.
          */
-        template<class... Rows>
-        struct table {
-            template<class Event>
-            static state_type execute(Derived& self, const Event& event, State state) {
-                using rows = typename filter_by_event_type<Event, Rows...>::type;
-                return invoke<Event, rows>::execute(self, event, state);
-            }
-        };
+        template<class... Rows> using table = detail::list<Rows...>;
 
         /**
          * Generic transition class template.
@@ -421,28 +416,32 @@ namespace fsmlite {
         > {};
 
     private:
-        template<class T, class Event>
-        struct has_event_type : std::is_same<typename T::event_type, Event> {};
+        template<class Event, class...> struct by_event_type;
 
         template<class Event, class... Types>
-        struct filter_by_event_type {
-            template <class T> using predicate = has_event_type<T, Event>;
+        struct by_event_type<Event, detail::list<Types...>> {
+            template<class T> using predicate = std::is_same<typename T::event_type, Event>;
             using type = typename detail::filter<predicate, Types...>::type;
         };
 
-        template<class Event, class...> struct invoke;
+        template<class Event>
+        struct by_event_type<Event, detail::list<>> {
+            using type = detail::list<>;
+        };
+
+        template<class Event, class...> struct handle_event;
 
         template<class Event, class T, class... Types>
-        struct invoke<Event, detail::list<T, Types...>> {
+        struct handle_event<Event, detail::list<T, Types...>> {
             static State execute(Derived& self, const Event& event, State state) {
                 return state == T::start_value() && T::check_guard(self, event) ?
                     T::process_event(self, event), T::target_value() :
-                    invoke<Event, detail::list<Types...>>::execute(self, event, state);
+                    handle_event<Event, detail::list<Types...>>::execute(self, event, state);
             }
         };
 
         template<class Event>
-        struct invoke<Event, detail::list<>> {
+        struct handle_event<Event, detail::list<>> {
             static State execute(Derived& self, const Event& event, State) {
                 return self.no_transition(event);
             }
