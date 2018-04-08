@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef FSMLITE_FSM_HPP
-#define FSMLITE_FSM_HPP
+#ifndef FSMLITE_FSM_H
+#define FSMLITE_FSM_H
 
 #include <type_traits>
 
