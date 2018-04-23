@@ -3,6 +3,7 @@
 test_guards
 test_notrans
 test_player
+test_recursive
 test_rows
 test_scoped
 test_traits

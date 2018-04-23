@@ -27,6 +27,10 @@
 
 #include <type_traits>
 
+#if !defined(NDEBUG) && (!__GNUC__ || __EXCEPTIONS)
+#include <stdexcept>
+#endif
+
 namespace fsmlite {
     namespace detail {
         // from C++17
@@ -177,29 +181,31 @@ namespace fsmlite {
 
     public:
         /**
-         * Create a state machine with default initial state.
-         */
-        fsm() : m_state() {}
-
-        /**
-         * Create a state machine with a custom initial state.
+         * Create a state machine with an optional initial state.
          *
          * @param init_state the FSM's initial state
          */
-        fsm(state_type init_state) : m_state(init_state) {}
+        fsm(state_type init_state = state_type()) : m_state(init_state) {}
 
         /**
          * Process an event.
          *
-         * @tparam Event the event tyoe
+         * @warning This member function must not be called
+         * recursively, e.g. from another `fsm` instance.
+         *
+         * @tparam Event the event type
          *
          * @param event the event instance
+         *
+         * @throw std::logic_error if a recursive invocation is
+         * detected
          */
         template<class Event>
         void process_event(const Event& event) {
+            using rows = typename by_event_type<Event, typename Derived::transition_table>::type;
+            processing_lock lock(*this);
             static_assert(std::is_base_of<fsm, Derived>::value, "must derive from fsm");
             Derived& self = static_cast<Derived&>(*this);
-            using rows = typename by_event_type<Event, typename Derived::transition_table>::type;
             m_state = handle_event<Event, rows>::execute(self, event, m_state);
         }
 
@@ -431,6 +437,29 @@ namespace fsmlite {
 
     private:
         state_type m_state;
+
+    private:
+#if !defined(NDEBUG) && (!__GNUC__ || __EXCEPTIONS)
+        class processing_lock {
+        public:
+            processing_lock(fsm& m) : processing(m.processing) {
+                if (processing) {
+                    throw std::logic_error("process_event called recursively");
+                }
+                processing = true;
+            }
+            ~processing_lock() {
+                processing = false;
+            }
+        private:
+            bool& processing;
+        };
+        bool processing = false;
+#else
+        struct processing_lock {
+            processing_lock(fsm&) {}
+        };
+#endif
     };
 }
 
