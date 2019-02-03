@@ -33,12 +33,39 @@
 
 namespace fsmlite {
     namespace detail {
-        // from C++17
+#if __cplusplus >= 201703L
+        template<bool B>
+        using bool_constant = std::bool_constant<B>;
+
+        template<class F, class... Args>
+        using invoke_result_t = std::invoke_result<F, Args...>;
+
+        template <class F, class... Args>
+        using is_invocable = std::is_invocable<F, Args...>;
+#else
         template<bool B>
         using bool_constant = std::integral_constant<bool, B>;
 
-        template<class T>
-        using result_of_t = typename std::result_of<T>::type;
+        template<class F, class... Args>
+        using invoke_result_t = typename std::result_of<F(Args...)>::type;
+
+        struct is_invocable_test {
+            struct no_type { int a; int b; };
+
+            template<class F, class... Args, class = invoke_result_t<F, Args...>>
+            static char test(int);
+
+            template<class, class...>
+            static no_type test(...);
+        };
+
+        template<class F, class... Args>
+        using is_invocable = typename std::conditional<
+            std::is_function<F>::value,
+            bool_constant<sizeof(is_invocable_test::test<F*, Args...>(0)) == 1>,
+            bool_constant<sizeof(is_invocable_test::test<F, Args...>(0)) == 1>
+        >::type;
+#endif
 
         // similar to std::integral_constant, but without const
         template<class T>
@@ -49,24 +76,6 @@ namespace fsmlite {
 
         template<class T>
         T typed_value<T>::value;
-
-        // similar to std::is_constructible
-        struct is_callable_test {
-            struct no_type { int a; int b; };
-
-            template<class T, class... Args, class = result_of_t<T(Args...)>>
-            static char test(int);
-
-            template<class, class...>
-            static no_type test(...);
-        };
-
-        template<class T, class... Args>
-        using is_callable = typename std::conditional<
-            std::is_function<T>::value,
-            bool_constant<sizeof(is_callable_test::test<T*, Args...>(0)) == 1>,
-            bool_constant<sizeof(is_callable_test::test<T, Args...>(0)) == 1>
-        >::type;
 
         // basic template metaprogramming stuff; note that we could
         // use std::tuple instead of list, but std::tuple is not
@@ -105,16 +114,16 @@ namespace fsmlite {
         // use any of fn(), fn(arg1), fn(arg2), fn(arg1, arg2)
         template<
             class T, T* fn, class Arg1, class Arg2,
-            bool f1 = is_callable<T>::value,
-            bool f2 = is_callable<T, Arg1>::value,
-            bool f3 = is_callable<T, Arg2>::value,
-            bool f4 = is_callable<T, Arg1, Arg2>::value
+            bool f1 = is_invocable<T>::value,
+            bool f2 = is_invocable<T, Arg1>::value,
+            bool f3 = is_invocable<T, Arg2>::value,
+            bool f4 = is_invocable<T, Arg1, Arg2>::value
         > struct make_binary_function;
 
         template<class T, T* fn, class Arg1, class Arg2>
         struct make_binary_function<T, fn, Arg1, Arg2, true, false, false, false> {
             static struct type {
-                result_of_t<T()> operator()(Arg1, Arg2) const {
+                invoke_result_t<T> operator()(Arg1, Arg2) const {
                     return (*fn)();
                 }
             } value;
@@ -127,7 +136,7 @@ namespace fsmlite {
         template<class T, T* fn, class Arg1, class Arg2>
         struct make_binary_function<T, fn, Arg1, Arg2, false, true, false, false> {
             static struct type {
-                result_of_t<T(Arg1)> operator()(Arg1 arg1, Arg2) const {
+                invoke_result_t<T, Arg1> operator()(Arg1 arg1, Arg2) const {
                     return (*fn)(arg1);
                 }
             } value;
@@ -140,7 +149,7 @@ namespace fsmlite {
         template<class T, T* fn, class Arg1, class Arg2>
         struct make_binary_function<T, fn, Arg1, Arg2, false, false, true, false> {
             static struct type {
-                result_of_t<T(Arg2)> operator()(Arg1, Arg2 arg2) const {
+                invoke_result_t<T, Arg2> operator()(Arg1, Arg2 arg2) const {
                     return (*fn)(arg2);
                 }
             } value;
@@ -153,7 +162,7 @@ namespace fsmlite {
         template<class T, T* fn, class Arg1, class Arg2>
         struct make_binary_function<T, fn, Arg1, Arg2, false, false, false, true> {
             static struct type {
-                result_of_t<T(Arg1, Arg2)> operator()(Arg1 arg1, Arg2 arg2) const {
+                invoke_result_t<T, Arg1, Arg2> operator()(Arg1 arg1, Arg2 arg2) const {
                     return (*fn)(arg1, arg2);
                 }
             } value;
