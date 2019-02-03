@@ -61,7 +61,7 @@ look at the [unit tests][4] for example usage.
 
 ## License
 
-Copyright (c) 2015-2018 Thomas Kemmer
+Copyright (c) 2015-2019 Thomas Kemmer
 
 Licensed under the [MIT License (MIT)][5].
 
