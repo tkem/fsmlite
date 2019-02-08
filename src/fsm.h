@@ -37,8 +37,12 @@ namespace fsmlite {
         template<bool B>
         using bool_constant = std::bool_constant<B>;
 
+        /* FIXME
         template<class F, class... Args>
         using invoke_result_t = std::invoke_result<F, Args...>;
+        */
+        template<class F, class... Args>
+        using invoke_result_t = std::result_of_t<F&&(Args&&...)>;
 
         template <class F, class... Args>
         using is_invocable = std::is_invocable<F, Args...>;
@@ -47,7 +51,7 @@ namespace fsmlite {
         using bool_constant = std::integral_constant<bool, B>;
 
         template<class F, class... Args>
-        using invoke_result_t = typename std::result_of<F(Args...)>::type;
+        using invoke_result_t = typename std::result_of<F&&(Args&&...)>::type;
 
         struct is_invocable_test {
             struct no_type { int a; int b; };

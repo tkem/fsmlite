@@ -6,39 +6,55 @@
 
 using namespace std::placeholders;
 
-bool is_zero(int i) {
-    return i == 0;
-}
+int value = 0;
 
-auto is_one = std::bind(std::equal_to<int>(), 1);
+// global actions
 
-auto is_two = [](int i) { return i == 2; };
+void store(int i) { value = i; }
+void store1() { value = 1; }
+auto store2 = [](){ value = 2; };
+struct { void operator()() { value = 3; } } store3;
+std::function<void()> store4 = [](){ value = 4; };
+void clear() { value = 0; }
+
+// global guards
+
+bool is1(int i) { return i == 1; }
+auto is2 = [](int i) { return i == 2; };
+struct { bool operator()(int i) const { return i == 3; } } is3;
+auto is4 = std::bind(std::equal_to<int>(), _1, 4);
+
+// fsm
 
 class state_machine: public fsmlite::fsm<state_machine> {
     friend class fsm;  // base class needs access to transition_table
+
 public:
     enum states { Init, Running, Exit };
 
-    typedef int event;
+    using event = int;
 
-private:
-    static bool is_done(const state_machine& sm) {
-        return false;
-    }
+public:
+
+    static void store5() { value = 5; }
+
+    static bool is5(int i) { return i == 5; }
 
 private:
     typedef state_machine m;
 
     using transition_table = table<
-//       Start    Event  Target   Action  Action*    Guard              Guard*
-//  ----+--------+------+--------+-------+----------+------------------+-----------+-
-    row< Init,    event, Running, void,   nullptr                                   >,
-    row< Running, event, Running, void,   nullptr,   decltype(is_zero),  &is_zero   >,
-    row< Running, event, Running, void,   nullptr,   decltype(is_one),   &is_one    >,
-    row< Running, event, Running, void,   nullptr,   decltype(is_two),   &is_two    >,
-    row< Running, event, Exit,    void,   nullptr,   decltype(is_done),  &is_done   >,
-    row< Exit,    event, Exit                                                       >
-//  ----+--------+------+--------+-------+----------+------------------+-----------+-
+//       Start    Event  Target   Action          Action*    Guard          Guard*
+//  ----+--------+------+--------+---------------+----------+--------------+------+-
+    row< Init,    event, Running, decltype(store),  &store                         >,
+    row< Running, event, Running, decltype(store1), &store1, decltype(is1), &is1   >,
+    row< Running, event, Running, decltype(store2), &store2, decltype(is2), &is2   >,
+    row< Running, event, Running, decltype(store3), &store3, decltype(is3), &is3   >,
+    row< Running, event, Running, decltype(store4), &store4, decltype(is4), &is4   >,
+    row< Running, event, Running, decltype(store5), &store5, decltype(is5), &is5   >,
+    row< Running, event, Exit,    decltype(clear),  &clear   /* fallback */        >,
+    row< Exit,    event, Exit                                                   >
+//  ----+--------+------+--------+---------------+----------+--------------+------+-
     >;
 };
 
@@ -47,5 +63,38 @@ int main()
 {
     state_machine m;
     assert(m.current_state() == state_machine::Init);
+    assert(value == 0);
+
+    m.process_event(42);
+    assert(m.current_state() == state_machine::Running);
+    assert(value == 42);
+
+    m.process_event(1);
+    assert(m.current_state() == state_machine::Running);
+    assert(value == 1);
+
+    m.process_event(2);
+    assert(m.current_state() == state_machine::Running);
+    assert(value == 2);
+
+    m.process_event(3);
+    assert(m.current_state() == state_machine::Running);
+    assert(value == 3);
+
+    m.process_event(4);
+    assert(m.current_state() == state_machine::Running);
+    assert(value == 4);
+
+    m.process_event(5);
+    assert(m.current_state() == state_machine::Running);
+    assert(value == 5);
+
+    m.process_event(42);
+    assert(m.current_state() == state_machine::Exit);
+    assert(value == 0);
+
+    m.process_event(42);
+    assert(m.current_state() == state_machine::Exit);
+    assert(value == 0);
     return 0;
 }
