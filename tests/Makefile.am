@@ -12,5 +12,3 @@ check_PROGRAMS = \
 	test_traits
 
 TESTS = $(check_PROGRAMS)
-
-XFAIL_TESTS = test_recursive

@@ -37,3 +37,7 @@ build-aux/
 config.log
 config.status
 configure
+
+# coverage generated
+*.gcda
+*.gcno

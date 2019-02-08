@@ -95,10 +95,17 @@ int main()
     assert(p.current_state() == player::Playing);
     p.process_event(player::pause());
     assert(p.current_state() == player::Paused);
+    p.process_event(player::play());
+    assert(p.current_state() == player::Playing);
+    p.process_event(player::stop());
+    assert(p.current_state() == player::Stopped);
+    p.process_event(player::play());
+    assert(p.current_state() == player::Playing);
     p.process_event(player::open_close());
     assert(p.current_state() == player::Open);
     p.process_event(player::open_close());
     assert(p.current_state() == player::Empty);
-
+    p.process_event(player::play());
+    assert(p.current_state() == player::Empty);
     return 0;
 }

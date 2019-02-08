@@ -21,6 +21,15 @@ AC_CANONICAL_HOST
 AX_CXXFLAGS_WARN_ALL
 AX_CXX_COMPILE_STDCXX_11
 
+AC_ARG_ENABLE([coverage],
+        [AS_HELP_STRING([--enable-coverage], [enable code coverage])],
+        [if test "$enableval" = "yes"; then
+            CFLAGS="$CFLAGS --coverage -O0"
+            CXXFLAGS="$CXXFLAGS --coverage -O0"
+            MOSTLYCLEANFILES="*.gcda *.gcno *.gcov $MOSTLYCLEANFILES"
+            AC_SUBST([MOSTLYCLEANFILES])
+        fi])
+
 AC_CONFIG_FILES([
         Makefile
         src/Makefile

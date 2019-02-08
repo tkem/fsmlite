@@ -1,5 +1,5 @@
-#include <cassert>
 #include <iostream>
+#include <stdexcept>
 #include <type_traits>
 
 #include "fsm.h"
@@ -17,18 +17,13 @@ private:
         process_event(e);
     }
 
-    void ignore(const event& e) {
-        std::cout << "Ignoring event\n";
-    }
-
 private:
     typedef state_machine m;
 
     using transition_table = table<
 //              Start Event  Target Action
 //  -----------+-----+------+------+-----------+-
-    mem_fn_row< Init, event, Exit,  &m::process >,
-    mem_fn_row< Init, event, Exit,  &m::ignore  >
+    mem_fn_row< Init, event, Exit,  &m::process >
 //  -----------+-----+------+------+-----------+-
     >;
 };
@@ -36,6 +31,11 @@ private:
 int main()
 {
     state_machine m;
-    m.process_event(state_machine::event());
-    return 0;  // this should never happen!
+    int rc = 1;
+    try {
+        m.process_event(state_machine::event());
+    } catch (std::logic_error&) {
+        rc = 0;
+    }
+    return rc;
 }

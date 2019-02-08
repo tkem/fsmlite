@@ -13,6 +13,7 @@ matrix:
             - g++-6
       env:
         - MATRIX_EVAL="CC=gcc-6 CXX=g++-6"
+        - GCOV=gcov-6
     - os: linux
       addons:
         apt:
@@ -22,6 +23,7 @@ matrix:
             - g++-7
       env:
         - MATRIX_EVAL="CC=gcc-7 CXX=g++-7"
+        - GCOV=gcov-7
     - os: linux
       addons:
         apt:
@@ -31,6 +33,7 @@ matrix:
             - g++-8
       env:
         - MATRIX_EVAL="CC=gcc-8 CXX=g++-8"
+        - GCOV=gcov-8
     - os: linux
       addons:
         apt:
@@ -41,6 +44,7 @@ matrix:
       env:
         - MATRIX_EVAL="CC=gcc-8 CXX=g++-8"
         - CXXFLAGS=-std=c++17
+        - GCOV=gcov-8
     - os: linux
       addons:
         apt:
@@ -72,7 +76,14 @@ matrix:
         - MATRIX_EVAL="CC=clang-7 CXX=clang++-7"
 
 before_install:
+  - pip install --user cpp-coveralls
   - eval "${MATRIX_EVAL}"
 
 before_script:
   - sh autogen.sh
+
+script:
+  - ./configure --enable-coverage && make && make check
+
+after_success:
+  - if [ -n "$GCOV" ]; then coveralls --gcov "$GCOV" --gcov-options '\-lp'; fi
