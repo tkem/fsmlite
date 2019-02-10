@@ -51,7 +51,7 @@ namespace fsmlite {
 
         template <class F, class... Args>
         using is_invocable = std::is_invocable<F, Args...>;
-#else
+#elif __cplusplus >= 201103L
         template<bool B>
         using bool_constant = std::integral_constant<bool, B>;
 
@@ -83,6 +83,8 @@ namespace fsmlite {
             bool_constant<sizeof(is_invocable_test::test<F*, Args...>(0)) == 1>,
             bool_constant<sizeof(is_invocable_test::test<F, Args...>(0)) == 1>
         >::type;
+#else
+#error "fsmlite requires C++11 support."
 #endif
 
         // similar to std::integral_constant, but without const
