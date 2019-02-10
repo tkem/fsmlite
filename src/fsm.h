@@ -376,7 +376,7 @@ namespace fsmlite {
             class Guard = void,
             Guard* guard = nullptr
         >
-        struct row: basic_row<
+        struct typed_row: basic_row<
             start, Event, target,
             typename make_action<Event, Action, action>::type,
             &make_action<Event, Action, action>::value,

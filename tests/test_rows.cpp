@@ -44,17 +44,17 @@ private:
     typedef state_machine m;
 
     using transition_table = table<
-//       Start    Event  Target   Action          Action*    Guard          Guard*
-//  ----+--------+------+--------+---------------+----------+--------------+------+-
-    row< Init,    event, Running, decltype(store),  &store                         >,
-    row< Running, event, Running, decltype(store1), &store1, decltype(is1), &is1   >,
-    row< Running, event, Running, decltype(store2), &store2, decltype(is2), &is2   >,
-    row< Running, event, Running, decltype(store3), &store3, decltype(is3), &is3   >,
-    row< Running, event, Running, decltype(store4), &store4, decltype(is4), &is4   >,
-    row< Running, event, Running, decltype(store5), &store5, decltype(is5), &is5   >,
-    row< Running, event, Exit,    decltype(clear),  &clear   /* fallback */        >,
-    row< Exit,    event, Exit                                                   >
-//  ----+--------+------+--------+---------------+----------+--------------+------+-
+//  Row-Type   Start    Event  Target   Action          Action*    Guard          Guard*
+//  ----------+--------+------+--------+---------------+----------+--------------+------+-
+    typed_row< Init,    event, Running, decltype(store),  &store                         >,
+    typed_row< Running, event, Running, decltype(store1), &store1, decltype(is1), &is1   >,
+    typed_row< Running, event, Running, decltype(store2), &store2, decltype(is2), &is2   >,
+    typed_row< Running, event, Running, decltype(store3), &store3, decltype(is3), &is3   >,
+    typed_row< Running, event, Running, decltype(store4), &store4, decltype(is4), &is4   >,
+    typed_row< Running, event, Running, decltype(store5), &store5, decltype(is5), &is5   >,
+    typed_row< Running, event, Exit,    decltype(clear),  &clear   /* fallback */        >,
+    typed_row< Exit,    event, Exit                                                   >
+//  ----------+--------+------+--------+---------------+----------+--------------+------+-
     >;
 };
 

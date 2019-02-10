@@ -23,10 +23,10 @@ private:
 
 private:
     using transition_table = table<
-//       Start Event  Target
-//  ----+-----+------+------+--
-    row< Init, event, Exit   >
-//  ----+-----+------+------+--
+//  Row-Type   Start Event  Target
+//  ----------+-----+------+------+-
+    typed_row< Init, event, Exit   >
+//  ----------+-----+------+------+-
     >;
 };
 
