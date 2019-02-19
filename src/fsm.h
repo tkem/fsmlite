@@ -37,6 +37,15 @@ namespace fsmlite {
         template<bool B>
         using bool_constant = std::bool_constant<B>;
 
+        template<class T>
+        using add_pointer_t = std::add_pointer_t<T>;
+
+        template<class T>
+        using remove_pointer_t = std::remove_pointer_t<T>;
+
+        template<class T>
+        using is_null_pointer = std::is_null_pointer<T>;
+
         template<class F, class... Args>
         using invoke_result_t = std::invoke_result_t<F, Args...>;
 
@@ -45,6 +54,15 @@ namespace fsmlite {
 #else
         template<bool B>
         using bool_constant = std::integral_constant<bool, B>;
+
+        template<class T>
+        using add_pointer_t = typename std::add_pointer<T>::type;
+
+        template<class T>
+        using remove_pointer_t = typename std::remove_pointer<T>::type;
+
+        template<class T>
+        using is_null_pointer = std::is_same<decltype(nullptr), typename std::remove_cv<T>::type>;
 
         template<class F, class... Args>
         using invoke_result_t = typename std::result_of<F&&(Args&&...)>::type;
@@ -281,18 +299,18 @@ namespace fsmlite {
         template<class Event, bool (Derived::*guard)(const Event&) const>
         struct mem_fn_guard: detail::typed_value<mem_fn_guard_type<Event, guard>> {};
 
-        template<class Event, class T, T* fn>
+        template<class Event, class F, F fn>
         using make_action = typename std::conditional<
-            !std::is_void<T>::value,
-            detail::make_binary_function<T, fn, Derived&, const Event&>,
-            no_action<Event>
+            detail::is_null_pointer<F>::value,
+            no_action<Event>,
+            detail::make_binary_function<detail::remove_pointer_t<F>, fn, Derived&, const Event&>
         >::type;
 
-        template<class Event, class T, T* fn>
+        template<class Event, class F, F fn>
         using make_guard = typename std::conditional<
-            !std::is_void<T>::value,
-            detail::make_binary_function<T, fn, const Derived&, const Event&>,
-            no_guard<Event>
+            detail::is_null_pointer<F>::value,
+            no_guard<Event>,
+            detail::make_binary_function<detail::remove_pointer_t<F>, fn, const Derived&, const Event&>
         >::type;
 
         template<class Event, void (Derived::*action)(const Event&)>
@@ -359,22 +377,22 @@ namespace fsmlite {
          *
          * @tparam target the target state of the transition
          *
-         * @tparam Action an action functor type, or `void`
+         * @tparam Action an action functor pointer type, or `std::nullptr_t`
          *
-         * @tparam action a pointer to an `Action` instance
+         * @tparam action a static `Action` instance
          *
-         * @tparam Guard a guard functor type, or `void`
+         * @tparam Guard a guard functor pointer type, or `std::nullptr_t`
          *
-         * @tparam guard a pointer to a `Guard` instance
+         * @tparam guard a static `Guard` instance
          */
         template<
             State start,
             class Event,
             State target,
-            class Action = void,
-            Action* action = nullptr,
-            class Guard = void,
-            Guard* guard = nullptr
+            class Action = decltype(nullptr),
+            Action action = nullptr,
+            class Guard = decltype(nullptr),
+            Guard guard = nullptr
         >
         struct typed_row: basic_row<
             start, Event, target,
