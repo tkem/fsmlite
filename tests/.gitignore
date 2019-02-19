@@ -1,9 +1,9 @@
 *.log
 *.trs
-test_guards
+test_mem_fn_row
 test_notrans
 test_player
 test_recursive
-test_rows
 test_scoped
 test_traits
+test_typed_row

@@ -41,7 +41,7 @@ public:
     static bool is5(int i) { return i == 5; }
 
 private:
-    typedef state_machine m;
+    using m = state_machine;
 
     using transition_table = table<
 //  Row-Type   Start    Event  Target   Action          Action*    Guard          Guard*

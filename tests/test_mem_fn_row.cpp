@@ -8,9 +8,10 @@ class state_machine: public fsmlite::fsm<state_machine> {
 public:
     enum states { Init, Even, Odd };
 
-    typedef int event;
+    using event = int;
 
 private:
+
     bool is_even(const event& e) const {
         return e % 2 == 0;
     }
@@ -20,7 +21,7 @@ private:
     }
 
 private:
-    typedef state_machine m;
+    using m = state_machine;
 
     using transition_table = table<
 //              Start Event  Target Action   Guard
