@@ -5,7 +5,8 @@ It is based on concepts first presented by David Abrahams and Aleksey
 Gurtovoy in [C++ Template Metaprogramming][1], with additional ideas
 taken liberally from Boost's [Meta State Machine][2] (MSM).
 
-The canonical CD player example looks somewhat like this:
+The canonical CD player example (with CD-Text and auto-play support!)
+therefore looks somewhat like this:
 
 ```C++
 #include <fsmlite/fsm.h>
@@ -15,12 +16,15 @@ class player: public fsmlite::fsm<player> {
 public:
     enum states { Stopped, Open, Empty, Playing, Paused };
 
-    player(state_type init_state = Empty) : fsm(init_state) {}
+    player(state_type init_state = Empty) : fsm(init_state) { }
+
+    void autoplay(bool f) {
+        m_autoplay = f;
+    }
 
     struct play {};
     struct open_close {};
     struct cd_detected {
-        cd_detected(const char* s = "") : title(s) { }
         std::string title;
     };
     struct stop {};
@@ -28,7 +32,9 @@ public:
 
 private:
     void start_playback(const play&);
+    void start_playback(const cd_detected& cd);
     void open_drawer(const open_close&);
+    void open_drawer(const cd_detected& cd);
     void close_drawer(const open_close&);
     void store_cd_info(const cd_detected& cd);
     void stop_playback(const stop&);
@@ -36,23 +42,38 @@ private:
     void stop_and_open(const open_close&);
     void resume_playback(const play&);
 
+    bool is_autoplay(const cd_detected&) const {
+        return m_autoplay;
+    }
+
+    bool is_bad_cd(const cd_detected& cd) const {
+        return cd.title.empty();
+    }
+
 private:
+    using m = player;  // for brevity
+
     using transition_table = table<
-//              Start    Event        Target   Action
-//  -----------+--------+------------+--------+------------------------+--
-    mem_fn_row< Stopped, play,        Playing, &player::start_playback  >,
-    mem_fn_row< Stopped, open_close,  Open,    &player::open_drawer     >,
-    mem_fn_row< Open,    open_close,  Empty,   &player::close_drawer    >,
-    mem_fn_row< Empty,   open_close,  Open,    &player::open_drawer     >,
-    mem_fn_row< Empty,   cd_detected, Stopped, &player::store_cd_info   >,
-    mem_fn_row< Playing, stop,        Stopped, &player::stop_playback   >,
-    mem_fn_row< Playing, pause,       Paused,  &player::pause_playback  >,
-    mem_fn_row< Playing, open_close,  Open,    &player::stop_and_open   >,
-    mem_fn_row< Paused,  play,        Playing, &player::resume_playback >,
-    mem_fn_row< Paused,  stop,        Stopped, &player::stop_playback   >,
-    mem_fn_row< Paused,  open_close,  Open,    &player::stop_and_open   >
-//  -----------+--------+------------+--------+------------------------+--
+//              Start    Event        Target   Action              Guard (optional)
+//  -----------+--------+------------+--------+-------------------+---------------+-
+    mem_fn_row< Stopped, play,        Playing, &m::start_playback                  >,
+    mem_fn_row< Stopped, open_close,  Open,    &m::open_drawer                     >,
+    mem_fn_row< Open,    open_close,  Empty,   &m::close_drawer                    >,
+    mem_fn_row< Empty,   open_close,  Open,    &m::open_drawer                     >,
+    mem_fn_row< Empty,   cd_detected, Open,    &m::open_drawer,    &m::is_bad_cd   >,
+    mem_fn_row< Empty,   cd_detected, Playing, &m::start_playback, &m::is_autoplay >,
+    mem_fn_row< Empty,   cd_detected, Stopped, &m::store_cd_info   /* fallback */  >,
+    mem_fn_row< Playing, stop,        Stopped, &m::stop_playback                   >,
+    mem_fn_row< Playing, pause,       Paused,  &m::pause_playback                  >,
+    mem_fn_row< Playing, open_close,  Open,    &m::stop_and_open                   >,
+    mem_fn_row< Paused,  play,        Playing, &m::resume_playback                 >,
+    mem_fn_row< Paused,  stop,        Stopped, &m::stop_playback                   >,
+    mem_fn_row< Paused,  open_close,  Open,    &m::stop_and_open                   >
+//  -----------+--------+------------+--------+-------------------+---------------+-
     >;
+
+private:
+    bool m_autoplay = false;
 };
 ```
 
