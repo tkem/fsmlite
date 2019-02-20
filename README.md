@@ -78,7 +78,9 @@ private:
 ```
 
 [Documentation][3] is in the works.  In the mean time, please have a
-look at the [unit tests][4] for example usage.
+look at the [unit tests][4] for example usage.  For compiler support,
+please check out the [Travis CI](https://travis-ci.org/tkem/fsmlite/)
+builds.
 
 ## License
 
