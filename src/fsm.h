@@ -258,7 +258,7 @@ namespace fsmlite {
                 detail::invoke_as_binary_fn(action, self, event);
             }
 
-            // clang++-50: constexpr function's return type 'void' is not a literal type
+            // clang++-5.0: constexpr function's return type 'void' is not a literal type
             static /*constexpr*/ void process_event(std::nullptr_t, Derived& self, const Event& event) {
             }
 
@@ -299,7 +299,6 @@ namespace fsmlite {
          *
          * @tparam guard a static `Guard` instance
          */
-
         template<
             State start,
             class Event,
@@ -354,6 +353,38 @@ namespace fsmlite {
                 }
             }
         };
+
+#if __cplusplus >= 201703L
+        /**
+         * Generic transition class template (requires C++17).
+         *
+         * @tparam start the start state of the transition
+         *
+         * @tparam Event the event type triggering the transition
+         *
+         * @tparam target the target state of the transition
+         *
+         * @tparam action a static action function pointer, or `nullptr`
+         *
+         * @tparam guard a static guard function pointer, or `nullptr`
+         */
+        template<
+            State start,
+            class Event,
+            State target,
+            auto action = nullptr,
+            auto guard = nullptr
+        >
+        struct row : public row_base<start, Event, target> {
+            static void process_event(Derived& self, const Event& event) {
+                row_base<start, Event, target>::process_event(action, self, event);
+            }
+
+            static bool check_guard(const Derived& self, const Event& event) {
+                return row_base<start, Event, target>::check_guard(guard, self, event);
+            }
+        };
+#endif
 
     private:
         template<class Event, class...> struct by_event_type;

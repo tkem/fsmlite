@@ -2,6 +2,8 @@
 
 #include "fsm.h"
 
+#if __cplusplus >= 201703L
+
 int value = 0;
 
 // global actions
@@ -37,20 +39,23 @@ private:
     using m = state_machine;
 
     using transition_table = table<
-//  Row-Type   Start    Event  Target   Action-Type           Action      Guard-Type         Guard
-//  ----------+--------+------+--------+---------------------+-----------+------------------+-------+-
-    basic_row< Init,    event, Running, decltype(&store),     &store                                 >,
-    basic_row< Running, event, Running, decltype(&store),     &store,     decltype(&is1),    &is1    >,
-    basic_row< Running, event, Running, decltype(&m::store2), &m::store2, decltype(&m::is2), &m::is2 >,
-    basic_row< Running, event, Running, decltype(&m::store3), &m::store3, decltype(&m::is3), &m::is3 >,
-    basic_row< Running, event, Exit,    decltype(&clear),     &clear      /* fallback */             >,
-    basic_row< Exit,    event, Exit                                                                  >
-//  ----------+--------+------+--------+---------------------+-----------+------------------+-------+-
+//       Start    Event  Target   Action      Guard
+//  ----+--------+------+--------+-----------+-------+-
+    row< Init,    event, Running, &store              >,
+    row< Running, event, Running, &store,     &is1    >,
+    row< Running, event, Running, &m::store2, &m::is2 >,
+    row< Running, event, Running, &m::store3, &m::is3 >,
+    row< Running, event, Exit,    &clear              >,
+    row< Exit,    event, Exit                         >
+//  ----+--------+------+--------+-----------+-------+-
     >;
 };
 
+#endif
+
 int main()
 {
+#if __cplusplus >= 201703L
     state_machine m;
     assert(m.current_state() == state_machine::Init);
     assert(value == 0);
@@ -78,5 +83,6 @@ int main()
     m.process_event(42);
     assert(m.current_state() == state_machine::Exit);
     assert(value == 0);
+#endif
     return 0;
 }

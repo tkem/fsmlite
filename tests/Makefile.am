@@ -8,6 +8,7 @@ check_PROGRAMS = \
 	test_mem_fn_row \
 	test_notrans \
 	test_recursive \
+	test_row \
 	test_scoped \
 	test_traits
 
