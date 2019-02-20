@@ -25,7 +25,7 @@ private:
     using transition_table = table<
 //  Row-Type   Start Event  Target
 //  ----------+-----+------+------+-
-    typed_row< Init, event, Exit   >
+    basic_row< Init, event, Exit   >
 //  ----------+-----+------+------+-
     >;
 };

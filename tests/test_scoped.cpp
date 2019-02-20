@@ -14,7 +14,7 @@ private:
     using transition_table = table<
 //  Row-Type   Start        Event  Target
 //  ----------+------------+------+-----------+-
-    typed_row< State::Init, event, State::Exit >
+    basic_row< State::Init, event, State::Exit >
 //  ----------+------------+------+-----------+-
     >;
 
