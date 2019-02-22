@@ -9,12 +9,15 @@ class state_machine: public fsmlite::fsm<state_machine> {
 public:
     enum states { Init, Exit };
 
-    typedef int event;
-
 private:
-    void process(const event& e) {
-        std::cout << "Processing event\n";
-        process_event(e);
+    void process(const int& event) {
+        std::cout << "Processing event: " << event << "\n";
+#ifdef NDEBUG
+        if (event != 0) {
+            throw std::logic_error("recursive invocation detected");
+        }
+#endif
+        process_event(event + 1);
     }
 
 private:
@@ -23,7 +26,7 @@ private:
     using transition_table = table<
 //              Start Event  Target Action
 //  -----------+-----+------+------+-----------+-
-    mem_fn_row< Init, event, Exit,  &m::process >
+    mem_fn_row< Init, int,   Exit,  &m::process >
 //  -----------+-----+------+------+-----------+-
     >;
 };
@@ -31,11 +34,11 @@ private:
 int main()
 {
     state_machine m;
-    int rc = 1;
     try {
-        m.process_event(state_machine::event());
-    } catch (std::logic_error&) {
-        rc = 0;
+        m.process_event(0);
+    } catch (std::logic_error& e) {
+        std::cerr << e.what() << "\n";
+        return 0;
     }
-    return rc;
+    return 1;
 }

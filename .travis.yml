@@ -60,6 +60,17 @@ matrix:
       addons:
         apt:
           sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-8
+      env:
+        - MATRIX_EVAL="CC=gcc-8 CXX=g++-8"
+        - CXXFLAGS=-DNDEBUG
+        - GCOV=gcov-8
+    - os: linux
+      addons:
+        apt:
+          sources:
             - llvm-toolchain-trusty-5.0
           packages:
             - clang-5.0
@@ -85,6 +96,17 @@ matrix:
             - clang-7
       env:
         - MATRIX_EVAL="CC=clang-7 CXX=clang++-7"
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-7
+          packages:
+            - clang-7
+      env:
+        - MATRIX_EVAL="CC=clang-7 CXX=clang++-7"
+        - CXXFLAGS=-DNDEBUG
 
 before_install:
   - pip install --user cpp-coveralls
