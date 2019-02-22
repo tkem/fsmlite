@@ -340,13 +340,13 @@ namespace fsmlite {
         >
         struct mem_fn_row : public row_base<start, Event, target> {
             static void process_event(Derived& self, const Event& event) {
-                if (action) {
+                if (action != nullptr) {
                     row_base<start, Event, target>::process_event(action, self, event);
                 }
             }
 
             static bool check_guard(const Derived& self, const Event& event) {
-                if (guard) {
+                if (guard != nullptr) {
                     return row_base<start, Event, target>::check_guard(guard, self, event);
                 } else {
                     return true;
