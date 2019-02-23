@@ -40,5 +40,5 @@ int main()
         std::cerr << e.what() << "\n";
         return 0;
     }
-    return 1;
+    return 1;  /* LCOV_EXCL_LINE */
 }
