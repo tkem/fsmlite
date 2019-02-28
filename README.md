@@ -9,30 +9,41 @@ The canonical CD player example (with CD-Text and auto-play support!)
 therefore looks somewhat like this:
 
 ```C++
-#include <fsmlite/fsm.h>
+#include "fsm.h"
+
+#include <string>
 
 class player: public fsmlite::fsm<player> {
     friend class fsm;  // base class needs access to transition_table
+
+    std::string cd_title;
+    bool autoplay = false;
+
 public:
     enum states { Stopped, Open, Empty, Playing, Paused };
 
     player(state_type init_state = Empty) : fsm(init_state) { }
 
-    void autoplay(bool f) {
-        m_autoplay = f;
-    }
+    void set_autoplay(bool f) { autoplay = f; }
+
+    bool is_autoplay() const { return autoplay; }
+
+    const std::string& get_cd_title() const { return cd_title; }
 
     struct play {};
     struct open_close {};
-    struct cd_detected {
-        std::string title;
-    };
+    struct cd_detected { std::string title; };
     struct stop {};
     struct pause {};
 
 private:
+    // guards
+    bool is_autoplay(const cd_detected&) const { return autoplay; }
+    bool is_bad_cd(const cd_detected& cd) const { return cd.title.empty(); }
+
+    // actions
     void start_playback(const play&);
-    void start_playback(const cd_detected& cd);
+    void start_autoplay(const cd_detected& cd);
     void open_drawer(const open_close&);
     void open_drawer(const cd_detected& cd);
     void close_drawer(const open_close&);
@@ -41,14 +52,6 @@ private:
     void pause_playback(const pause&);
     void stop_and_open(const open_close&);
     void resume_playback(const play&);
-
-    bool is_autoplay(const cd_detected&) const {
-        return m_autoplay;
-    }
-
-    bool is_bad_cd(const cd_detected& cd) const {
-        return cd.title.empty();
-    }
 
 private:
     using m = player;  // for brevity
@@ -61,7 +64,7 @@ private:
     mem_fn_row< Open,    open_close,  Empty,   &m::close_drawer                    >,
     mem_fn_row< Empty,   open_close,  Open,    &m::open_drawer                     >,
     mem_fn_row< Empty,   cd_detected, Open,    &m::open_drawer,    &m::is_bad_cd   >,
-    mem_fn_row< Empty,   cd_detected, Playing, &m::start_playback, &m::is_autoplay >,
+    mem_fn_row< Empty,   cd_detected, Playing, &m::start_autoplay, &m::is_autoplay >,
     mem_fn_row< Empty,   cd_detected, Stopped, &m::store_cd_info   /* fallback */  >,
     mem_fn_row< Playing, stop,        Stopped, &m::stop_playback                   >,
     mem_fn_row< Playing, pause,       Paused,  &m::pause_playback                  >,
@@ -71,9 +74,70 @@ private:
     mem_fn_row< Paused,  open_close,  Open,    &m::stop_and_open                   >
 //  -----------+--------+------------+--------+-------------------+---------------+-
     >;
+};
+```
+
+C++17 will give you a little more flexibility:
+
+```C++
+class player: public fsmlite::fsm<player> {
+    friend class fsm;  // base class needs access to transition_table
+
+    std::string cd_title;
+    bool autoplay = false;
+
+public:
+    enum states { Stopped, Open, Empty, Playing, Paused };
+
+    player(state_type init_state = Empty) : fsm(init_state) { }
+
+    void set_autoplay(bool f) { autoplay = f; }
+
+    bool is_autoplay() const { return autoplay; }
+
+    const std::string& get_cd_title() const { return cd_title; }
+
+    struct play {};
+    struct open_close {};
+    struct cd_detected {
+        std::string title;
+        bool bad() const { return title.empty(); }
+    };
+    struct stop {};
+    struct pause {};
 
 private:
-    bool m_autoplay = false;
+    void start_playback();
+    void start_autoplay(const cd_detected& cd);
+    void open_drawer();
+    void close_drawer();
+    void store_cd_info(const cd_detected& cd);
+    void stop_playback();
+    void pause_playback();
+    void resume_playback();
+    void stop_and_open();
+
+private:
+    using m = player;  // for brevity
+
+    using transition_table = table<
+//       Start    Event        Target   Action              Guard (optional)
+//  ----+--------+------------+--------+-------------------+-----------------+-
+    row< Stopped, play,        Playing, &m::start_playback                    >,
+    row< Stopped, open_close,  Open,    &m::open_drawer                       >,
+    row< Open,    open_close,  Empty,   &m::close_drawer                      >,
+    row< Empty,   open_close,  Open,    &m::open_drawer                       >,
+    row< Empty,   cd_detected, Open,    &m::open_drawer,    &cd_detected::bad >,
+    row< Empty,   cd_detected, Playing, &m::start_autoplay, &m::is_autoplay   >,
+    row< Empty,   cd_detected, Stopped, &m::store_cd_info   /* fallback */    >,
+    row< Playing, stop,        Stopped, &m::stop_playback                     >,
+    row< Playing, pause,       Paused,  &m::pause_playback                    >,
+    row< Playing, open_close,  Open,    &m::stop_and_open                     >,
+    row< Paused,  play,        Playing, &m::resume_playback                   >,
+    row< Paused,  stop,        Stopped, &m::stop_playback                     >,
+    row< Paused,  open_close,  Open,    &m::stop_and_open                     >
+//  ----+--------+------------+--------+-------------------+-----------------+-
+    >;
 };
 ```
 
