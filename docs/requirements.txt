@@ -1,2 +1,2 @@
-breathe
-sphinx
+# as of Jun 2020, RTD still uses sphinx 1.8.5, which won't work with current breathe versions
+breathe<4.12
