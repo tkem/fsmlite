@@ -239,7 +239,7 @@ namespace fsmlite {
          * @return the FSM's new state
          */
         template<class Event>
-        state_type no_transition(const Event& event) {
+        state_type no_transition(const Event& /*event*/) {
             return m_state;
         }
 
@@ -259,7 +259,7 @@ namespace fsmlite {
             }
 
             // clang++-5.0: constexpr function's return type 'void' is not a literal type
-            static /*constexpr*/ void process_event(std::nullptr_t, Derived& self, const Event& event) {
+            static /*constexpr*/ void process_event(std::nullptr_t, Derived& /*self*/, const Event& /*event*/) {
             }
 
             template<class Guard>
