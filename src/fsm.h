@@ -224,6 +224,11 @@ namespace fsmlite {
          */
         state_type current_state() const { return m_state; }
 
+        /**
+         * Asynchronously set the state machine's current state.
+         */
+        void set_current_state(state_type new_state) { m_state = new_state; }
+
     protected:
         /**
          * Called when no transition can be found for the given event
