@@ -136,7 +136,10 @@ namespace fsmlite {
 
         template<class F, class Arg1, class Arg2>
         invoke_as_binary_fn_result_t<F, Arg1, Arg2>invoke_as_binary_fn(F&& f, Arg1&& a, Arg2&& b) {
-            return binary_fn_helper<F, Arg1, Arg2>::invoke(forward<F>(f), forward<Arg1>(a), forward<Arg2>(b));
+            return binary_fn_helper<F, Arg1, Arg2>::invoke(
+                detail::forward<F>(f),
+                detail::forward<Arg1>(a),
+                detail::forward<Arg2>(b));
         }
 
         // basic template metaprogramming stuff; note that we could

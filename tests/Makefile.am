@@ -10,6 +10,7 @@ check_PROGRAMS = \
 	test_recursive \
 	test_row \
 	test_scoped \
+	test_shared \
 	test_traits
 
 TESTS = $(check_PROGRAMS)
