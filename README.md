@@ -14,7 +14,7 @@ therefore looks somewhat like this:
 #include <string>
 
 class player: public fsmlite::fsm<player> {
-    friend class fsm;  // base class needs access to transition_table
+    friend class fsmlite::fsm<player>;  // base class needs access to transition_table
 
     std::string cd_title;
     bool autoplay = false;
@@ -81,7 +81,7 @@ C++17 will give you a little more flexibility:
 
 ```C++
 class player: public fsmlite::fsm<player> {
-    friend class fsm;  // base class needs access to transition_table
+    friend class fsmlite::fsm<player>;  // base class needs access to transition_table
 
     std::string cd_title;
     bool autoplay = false;

@@ -7,7 +7,7 @@
 #if __cplusplus >= 201703L
 
 class player: public fsmlite::fsm<player> {
-    friend class fsm;  // base class needs access to transition_table
+    friend class fsmlite::fsm<player>;  // base class needs access to transition_table
 
     std::string cd_title;
     bool autoplay = false;
@@ -118,7 +118,7 @@ void player::resume_playback()
 #else
 
 class player: public fsmlite::fsm<player> {
-    friend class fsm;  // base class needs access to transition_table
+    friend class fsmlite::fsm<player>;  // base class needs access to transition_table
 
     std::string cd_title;
     bool autoplay = false;
