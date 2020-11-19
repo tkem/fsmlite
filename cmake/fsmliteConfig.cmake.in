@@ -1,0 +1,6 @@
+get_filename_component(fsmlite_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+include(CMakeFindDependencyMacro)
+
+if(NOT TARGET fsmlite::fsmlite)
+    include("${fsmlite_CMAKE_DIR}/fsmliteTargets.cmake")
+endif()
