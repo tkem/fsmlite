@@ -6,7 +6,7 @@
 enum class State { Init, Exit };
 
 class state_machine: public fsmlite::fsm<state_machine, State> {
-    friend class fsm;  // base class needs access to transition_table
+    friend class fsmlite::fsm<state_machine, State>;  // base class needs access to transition_table
 public:
     struct event {};
 
