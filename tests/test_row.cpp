@@ -18,7 +18,7 @@ bool is1(int i) { return i == 1; }
 // fsm
 
 class state_machine: public fsmlite::fsm<state_machine> {
-    friend class fsm;  // base class needs access to transition_table
+    friend class fsmlite::fsm<state_machine>;  // base class needs access to transition_table
 
 public:
     enum states { Init, Running, Exit };
