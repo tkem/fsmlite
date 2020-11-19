@@ -67,3 +67,25 @@ If you can run the resulting test binary on the host:
 ctest -C Debug|Release
 ```
 
+## Linking with other targets
+CMake can find installed targets by using the `find_package` macro.
+
+Example:
+`find_package(fsmlite)`
+
+You can the link with the target like so:
+
+```
+target_link_libraries(${NAME}
+    PRIVATE
+        fsmlite::fsmlite
+)
+```
+
+If you compiled fsmlite outside of the build tree, you can now access fsmlite by calling
+
+```
+include <fsmlite/fsm.h>
+```
+
+See `tests` for full example.
