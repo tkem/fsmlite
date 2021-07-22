@@ -15,8 +15,8 @@ AC_PROG_INSTALL
 AC_CHECK_PROGS([DOXYGEN], [doxygen], [false])
 AC_CHECK_PROGS([SPHINXBUILD], [sphinx-build], [false])
 
+AX_CXX_COMPILE_STDCXX([11])
 AX_CXXFLAGS_WARN_ALL
-AX_CXX_COMPILE_STDCXX_11
 
 AC_ARG_ENABLE([coverage],
         AS_HELP_STRING([--enable-coverage], [enable code coverage]),
