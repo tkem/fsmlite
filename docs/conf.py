@@ -17,7 +17,7 @@ project = 'fsmlite'
 author = 'Thomas Kemmer'
 version = get_version(b'../configure.ac')
 release = version
-copyright = '%s, %s' % ('2015-2020', author)
+copyright = '%s, %s' % ('2015-2021', author)
 
 master_doc = 'index'
 

@@ -150,7 +150,7 @@ builds.
 
 ## License
 
-Copyright (c) 2015-2020 Thomas Kemmer
+Copyright (c) 2015-2021 Thomas Kemmer
 
 Licensed under the [MIT License (MIT)][5].
 
