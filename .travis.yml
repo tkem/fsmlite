@@ -11,28 +11,6 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - g++-6
-      env:
-        - MATRIX_EVAL="CC=gcc-6 CXX=g++-6"
-        - GCOV=gcov-6
-    - os: linux
-      dist: xenial
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-7
-      env:
-        - MATRIX_EVAL="CC=gcc-7 CXX=g++-7"
-        - GCOV=gcov-7
-    - os: linux
-      dist: xenial
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
             - g++-8
       env:
         - MATRIX_EVAL="CC=gcc-8 CXX=g++-8"
@@ -84,28 +62,6 @@ matrix:
         - CXXFLAGS=-DNDEBUG
         - GCOV=gcov-10
     - os: linux
-      dist: trusty
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-7
-          packages:
-            - clang-7
-      env:
-        - MATRIX_EVAL="CC=clang-7 CXX=clang++-7"
-    - os: linux
-      dist: trusty
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-8
-          packages:
-            - clang-8
-      env:
-        - MATRIX_EVAL="CC=clang-8 CXX=clang++-8"
-    - os: linux
       dist: bionic
       addons:
         apt:
@@ -122,11 +78,22 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-bionic-9
+            - llvm-toolchain-bionic-10
           packages:
-            - clang-9
+            - clang-10
       env:
-        - MATRIX_EVAL="CC=clang-9 CXX=clang++-9"
+        - MATRIX_EVAL="CC=clang-10 CXX=clang++-10"
+    - os: linux
+      dist: bionic
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-bionic-10
+          packages:
+            - clang-10
+      env:
+        - MATRIX_EVAL="CC=clang-10 CXX=clang++-10"
         - CXXFLAGS=-std=c++17
     - os: linux
       dist: bionic
@@ -134,11 +101,11 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-bionic-9
+            - llvm-toolchain-bionic-10
           packages:
-            - clang-9
+            - clang-10
       env:
-        - MATRIX_EVAL="CC=clang-9 CXX=clang++-9"
+        - MATRIX_EVAL="CC=clang-10 CXX=clang++-10"
         - CXXFLAGS=-DNDEBUG
 
 before_install:
