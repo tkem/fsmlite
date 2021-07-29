@@ -1,0 +1,41 @@
+name: CI
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  main:
+    name: ${{ matrix.cc }} (${{ matrix.std }}) on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        cc: [clang-10, clang-11, clang-12, gcc-9, gcc-10]
+        std: [c++11, c++17]
+        include:
+          - cc: clang-10
+            cxx: clang++-10
+            os: ubuntu-20.04
+          - cc: clang-11
+            cxx: clang++-11
+            os: ubuntu-20.04
+          - cc: clang-12
+            cxx: clang++-12
+            os: ubuntu-20.04
+          - cc: gcc-9
+            cxx: g++-9
+            gcov: gcov-9
+            os: ubuntu-20.04
+          - cc: gcc-10
+            cxx: g++-10
+            gcov: gcov-10
+            os: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Generate configure script
+        run: sh autogen.sh
+      - name: Configure, build and run tests
+        env:
+          CC: ${{ matrix.cc }}
+          CXX: ${{ matrix.cxx }}
+          CXXFLAGS: -std=${{ matrix.std }}
+        run: ./configure && make && make check
