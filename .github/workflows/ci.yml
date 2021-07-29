@@ -39,3 +39,13 @@ jobs:
           CXX: ${{ matrix.cxx }}
           CXXFLAGS: -std=${{ matrix.std }}
         run: ./configure && make && make check
+  msvc:
+    name: MSVC on windows-latest
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build and run tests
+        run: |
+          cmake -S . -B .
+          cmake --build .
+          ctest -C Debug
