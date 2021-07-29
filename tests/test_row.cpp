@@ -2,7 +2,7 @@
 
 #include "fsm.h"
 
-#if __cplusplus >= 201703L
+#if __cplusplus >= 201703L || _MSVC_LANG >= 201703L
 
 int value = 0;
 
@@ -55,7 +55,7 @@ private:
 
 int main()
 {
-#if __cplusplus >= 201703L
+#if __cplusplus >= 201703L || _MSVC_LANG >= 201703L
     state_machine m;
     assert(m.current_state() == state_machine::Init);
     assert(value == 0);

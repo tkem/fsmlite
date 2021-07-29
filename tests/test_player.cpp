@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 
-#if __cplusplus >= 201703L
+#if __cplusplus >= 201703L || _MSVC_LANG >= 201703L
 
 class player: public fsmlite::fsm<player> {
     friend class fsmlite::fsm<player>;  // base class needs access to transition_table

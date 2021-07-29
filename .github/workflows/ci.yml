@@ -40,12 +40,19 @@ jobs:
           CXXFLAGS: -std=${{ matrix.std }}
         run: ./configure && make && make check
   msvc:
-    name: MSVC on windows-latest
+    name: Windows ${{ matrix.config }} build (C++${{ matrix.standard }})
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [Debug, Release]
+        standard: [11, 17]
     steps:
       - uses: actions/checkout@v2
-      - name: Build and run tests
-        run: |
-          cmake -S . -B .
-          cmake --build .
-          ctest -C Debug
+      - name: Configure CMake
+        run: cmake -B build -D CMAKE_CXX_STANDARD=${{ matrix.standard }}
+      - name: Build
+        run: cmake --build build --config ${{ matrix.config }}
+      - name: Run tests
+        working-directory: build
+        run: ctest -C ${{ matrix.config }}

@@ -34,13 +34,13 @@
 
 namespace fsmlite {
     namespace detail {
-#if __cplusplus >= 201703L
+#if __cplusplus >= 201703L || _MSVC_LANG >= 201703L
         template<class F, class... Args>
         using invoke_result_t = std::invoke_result_t<F, Args...>;
 
         template <class F, class... Args>
         using is_invocable = std::is_invocable<F, Args...>;
-#elif __cplusplus >= 201103L
+#elif __cplusplus >= 201103L || _MSVC_LANG >= 201103L
         template<class F, class... Args>
         using invoke_result_t = typename std::result_of<F&&(Args&&...)>::type;
 
@@ -357,7 +357,7 @@ namespace fsmlite {
             }
         };
 
-#if __cplusplus >= 201703L
+#if __cplusplus >= 201703L || _MSVC_LANG >= 201703L
         /**
          * Generic transition class template (requires C++17).
          *
