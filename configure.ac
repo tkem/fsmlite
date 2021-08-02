@@ -15,20 +15,17 @@ AC_PROG_INSTALL
 AC_CHECK_PROGS([DOXYGEN], [doxygen], [false])
 AC_CHECK_PROGS([SPHINXBUILD], [sphinx-build], [false])
 
-AC_CANONICAL_BUILD
-AC_CANONICAL_HOST
-
 AX_CXXFLAGS_WARN_ALL
 AX_CXX_COMPILE_STDCXX_11
 
 AC_ARG_ENABLE([coverage],
-        [AS_HELP_STRING([--enable-coverage], [enable code coverage])],
-        [if test "$enableval" = "yes"; then
-            CFLAGS="$CFLAGS --coverage -O0"
-            CXXFLAGS="$CXXFLAGS --coverage -O0"
+        AS_HELP_STRING([--enable-coverage], [enable code coverage]),
+        AS_IF([test "$enableval" = "yes"], [
+            AX_APPEND_COMPILE_FLAGS([--coverage -O0])
             MOSTLYCLEANFILES="*.gcda *.gcno *.gcov $MOSTLYCLEANFILES"
             AC_SUBST([MOSTLYCLEANFILES])
-        fi])
+        ])
+)
 
 AC_CONFIG_FILES([
         Makefile
