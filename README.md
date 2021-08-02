@@ -152,8 +152,8 @@ Copyright (c) 2015-2021 Thomas Kemmer
 
 Licensed under the [MIT License (MIT)][5].
 
-[1]: http://www.informit.com/store/c-plus-plus-template-metaprogramming-concepts-tools-9780321227256
-[2]: http://www.boost.org/doc/libs/1_59_0/libs/msm/doc/HTML/index.html
-[3]: http://fsmlite.readthedocs.org/en/latest/
+[1]: https://www.informit.com/store/c-plus-plus-template-metaprogramming-concepts-tools-9780321227256
+[2]: https://www.boost.org/doc/libs/1_59_0/libs/msm/doc/HTML/index.html
+[3]: https://fsmlite.readthedocs.io/en/latest/
 [4]: https://github.com/tkem/fsmlite/tree/master/tests
 [5]: https://github.com/tkem/fsmlite/tree/master/LICENSE
