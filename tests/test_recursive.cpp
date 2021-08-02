@@ -24,10 +24,10 @@ private:
     typedef state_machine m;
 
     using transition_table = table<
-//              Start Event  Target Action
-//  -----------+-----+------+------+-----------+-
-    mem_fn_row< Init, int,   Exit,  &m::process >
-//  -----------+-----+------+------+-----------+-
+//       Start Event Target Action
+//  ----+-----+-----+------+-----------+-
+    row< Init, int,  Exit,  &m::process >
+//  ----+-----+-----+------+-----------+-
     >;
 };
 

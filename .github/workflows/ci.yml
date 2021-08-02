@@ -4,13 +4,12 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   main:
-    name: ${{ matrix.cc }} (C++${{ matrix.std }}) on ${{ matrix.os }}
+    name: ${{ matrix.cc }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         cc: [clang-10, clang-11, clang-12, gcc-9, gcc-10]
-        std: [11, 17]
         include:
           - cc: clang-10
             cxx: clang++-10
@@ -38,7 +37,6 @@ jobs:
         env:
           CC: ${{ matrix.cc }}
           CXX: ${{ matrix.cxx }}
-          CXXFLAGS: -std=c++${{ matrix.std }}
         run: ./configure --enable-coverage && make check
       - name: Create coverage information
         run: ${{ matrix.gcov }} -r *.cpp
@@ -47,20 +45,19 @@ jobs:
       - name: Upload coverage information
         uses: codecov/codecov-action@v2
         with:
-          name: ${{ matrix.cc }} (C++${{ matrix.std }}) on ${{ matrix.os }}
+          name: ${{ matrix.cc }} on ${{ matrix.os }}
         if: ${{ matrix.gcov }}
   msvc:
-    name: Windows ${{ matrix.config }} build (C++${{ matrix.std }})
+    name: Windows ${{ matrix.config }} build
     runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
         config: [Debug, Release]
-        std: [11, 17]
     steps:
       - uses: actions/checkout@v2
       - name: Configure CMake
-        run: cmake -B build -D CMAKE_CXX_STANDARD=${{ matrix.std }}
+        run: cmake -B build
       - name: Build
         run: cmake --build build --config ${{ matrix.config }}
       - name: Run tests

@@ -4,8 +4,6 @@ macro(fsmlite_add_test TESTNAME)
     add_test(NAME ${PROJECT_NAME}_${TESTNAME} COMMAND ${TESTNAME})
 endmacro(fsmlite_add_test)
 
-fsmlite_add_test(test_basic_row)
-fsmlite_add_test(test_mem_fn_row)
 fsmlite_add_test(test_notrans)
 fsmlite_add_test(test_player)
 fsmlite_add_test(test_recursive)

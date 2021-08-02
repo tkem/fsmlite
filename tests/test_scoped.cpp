@@ -12,10 +12,10 @@ public:
 
 private:
     using transition_table = table<
-//  Row-Type   Start        Event  Target
-//  ----------+------------+------+-----------+-
-    basic_row< State::Init, event, State::Exit >
-//  ----------+------------+------+-----------+-
+//       Start        Event  Target
+//  ----+------------+------+-----------+-
+    row< State::Init, event, State::Exit >
+//  ----+------------+------+-----------+-
     >;
 
     static_assert(std::is_same<state_type, State>::value,

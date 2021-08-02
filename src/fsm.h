@@ -25,6 +25,10 @@
 #ifndef FSMLITE_FSM_H
 #define FSMLITE_FSM_H
 
+#if __cplusplus < 201703L && _MSVC_LANG < 201703L
+#error "fsmlite requires C++17 support."
+#endif
+
 #include <cstddef>
 #include <type_traits>
 
@@ -34,34 +38,6 @@
 
 namespace fsmlite {
     namespace detail {
-#if __cplusplus >= 201703L || _MSVC_LANG >= 201703L
-        template<class F, class... Args>
-        using invoke_result_t = std::invoke_result_t<F, Args...>;
-
-        template <class F, class... Args>
-        using is_invocable = std::is_invocable<F, Args...>;
-#elif __cplusplus >= 201103L || _MSVC_LANG >= 201103L
-        template<class F, class... Args>
-        using invoke_result_t = typename std::result_of<F&&(Args&&...)>::type;
-
-        struct is_invocable_test {
-            struct no_type { int a; int b; };
-
-            template<class F, class... Args, class = invoke_result_t<F, Args...>>
-            static char test(int);
-
-            template<class, class...>
-            static no_type test(...);
-        };
-
-        template<class F, class... Args>
-            using is_invocable = typename std::integral_constant<
-            bool,
-            sizeof(is_invocable_test::test<F, Args...>(0)) == 1
-        >::type;
-#else
-#error "fsmlite requires C++11 support."
-#endif
         // C++11 std::forward() is in <utility>, which may not be
         // present on freestanding implementations
         template<class T>
@@ -77,27 +53,27 @@ namespace fsmlite {
         // C++17 std::invoke() is in <functional>, which may not be
         // present on freestanding implementations
         template <class F, class... Args>
-        invoke_result_t<F, Args...> invoke(F&& f, Args&&... args) {
+        std::invoke_result_t<F, Args...> invoke(F&& f, Args&&... args) {
             return f(args...);
         }
 
         template <class M, class T, class T1, class... Args>
-        invoke_result_t<M T::*, T1, Args...> invoke(M T::* f, T1&& obj, Args&&... args) {
+        std::invoke_result_t<M T::*, T1, Args...> invoke(M T::* f, T1&& obj, Args&&... args) {
             return (obj.*f)(args...);
         }
 
         // use any of F(), F(Arg1), F(Arg2), F(Arg1, Arg2)
         template<
             class F, class Arg1, class Arg2,
-            bool f1 = is_invocable<F>::value,
-            bool f2 = is_invocable<F, Arg1>::value,
-            bool f3 = is_invocable<F, Arg2>::value,
-            bool f4 = is_invocable<F, Arg1, Arg2>::value
+            bool f1 = std::is_invocable<F>::value,
+            bool f2 = std::is_invocable<F, Arg1>::value,
+            bool f3 = std::is_invocable<F, Arg2>::value,
+            bool f4 = std::is_invocable<F, Arg1, Arg2>::value
         > struct binary_fn_helper;
 
         template<class F, class Arg1, class Arg2>
         struct binary_fn_helper<F, Arg1, Arg2, true, false, false, false> {
-            using result_type = invoke_result_t<F>;
+            using result_type = std::invoke_result_t<F>;
 
             static result_type invoke(F&& f, Arg1&&, Arg2&&) {
                 return detail::invoke(f);
@@ -106,7 +82,7 @@ namespace fsmlite {
 
         template<class F, class Arg1, class Arg2>
         struct binary_fn_helper<F, Arg1, Arg2, false, true, false, false> {
-            using result_type = invoke_result_t<F, Arg1>;
+            using result_type = std::invoke_result_t<F, Arg1>;
 
             static result_type invoke(F&& f, Arg1&& a, Arg2&&) {
                 return detail::invoke(f, a);
@@ -115,7 +91,7 @@ namespace fsmlite {
 
         template<class F, class Arg1, class Arg2>
         struct binary_fn_helper<F, Arg1, Arg2, false, false, true, false> {
-            using result_type = invoke_result_t<F, Arg2>;
+            using result_type = std::invoke_result_t<F, Arg2>;
 
             static result_type invoke(F&& f, Arg1&&, Arg2&& b) {
                 return detail::invoke(f, b);
@@ -124,7 +100,7 @@ namespace fsmlite {
 
         template<class F, class Arg1, class Arg2>
         struct binary_fn_helper<F, Arg1, Arg2, false, false, false, true> {
-            using result_type = invoke_result_t<F, Arg1, Arg2>;
+            using result_type = std::invoke_result_t<F, Arg1, Arg2>;
 
             static result_type invoke(F&& f, Arg1&& a, Arg2&& b) {
                 return detail::invoke(f, a, b);
@@ -286,80 +262,7 @@ namespace fsmlite {
         template<class... Rows> using table = detail::list<Rows...>;
 
         /**
-         * Basic transition class template.
-         *
-         * @tparam start the start state of the transition
-         *
-         * @tparam Event the event type triggering the transition
-         *
-         * @tparam target the target state of the transition
-         *
-         * @tparam Action an action function type, or `std::nullptr_t`
-         *
-         * @tparam action a static `Action` instance
-         *
-         * @tparam Guard a guard function type, or `std::nullptr_t`
-         *
-         * @tparam guard a static `Guard` instance
-         */
-        template<
-            State start,
-            class Event,
-            State target,
-            class Action = std::nullptr_t,
-            Action action = nullptr,
-            class Guard = std::nullptr_t,
-            Guard guard = nullptr
-        >
-        struct basic_row : public row_base<start, Event, target> {
-            static void process_event(Derived& self, const Event& event) {
-                row_base<start, Event, target>::process_event(action, self, event);
-            }
-
-            static bool check_guard(const Derived& self, const Event& event) {
-                return row_base<start, Event, target>::check_guard(guard, self, event);
-            }
-        };
-
-        /**
-         * Member function transition class template.
-         *
-         * @tparam start the start state of the transition
-         *
-         * @tparam Event the event type triggering the transition
-         *
-         * @tparam target the target state of the transition
-         *
-         * @tparam action an action member function, or `nullptr`
-         *
-         * @tparam guard a guard member function, or `nullptr`
-         */
-        template<
-            State start,
-            class Event,
-            State target,
-            void (Derived::*action)(const Event&) = nullptr,
-            bool (Derived::*guard)(const Event&) const = nullptr
-        >
-        struct mem_fn_row : public row_base<start, Event, target> {
-            static void process_event(Derived& self, const Event& event) {
-                if (action != nullptr) {
-                    row_base<start, Event, target>::process_event(action, self, event);
-                }
-            }
-
-            static bool check_guard(const Derived& self, const Event& event) {
-                if (guard != nullptr) {
-                    return row_base<start, Event, target>::check_guard(guard, self, event);
-                } else {
-                    return true;
-                }
-            }
-        };
-
-#if __cplusplus >= 201703L || _MSVC_LANG >= 201703L
-        /**
-         * Generic transition class template (requires C++17).
+         * Transition class template.
          *
          * @tparam start the start state of the transition
          *
@@ -387,7 +290,6 @@ namespace fsmlite {
                 return row_base<start, Event, target>::check_guard(guard, self, event);
             }
         };
-#endif
 
     private:
         template<class Event, class...> struct by_event_type;

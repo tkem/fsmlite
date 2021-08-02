@@ -16,10 +16,10 @@ private:
     using m = state_machine;
 
     using transition_table = table<
-//  Row-Type    Start Event  Target Action
-//  -----------+-----+------+------+----------+-
-    mem_fn_row< Init, event, Exit,  &m::action >
-//  -----------+-----+------+------+----------+-
+//       Start Event  Target Action
+//  ----+-----+------+------+----------+-
+    row< Init, event, Exit,  &m::action >
+//  ----+-----+------+------+----------+-
     >;
 };
 

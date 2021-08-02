@@ -47,18 +47,6 @@ matrix:
             - g++-10
       env:
         - MATRIX_EVAL="CC=gcc-10 CXX=g++-10"
-        - CXXFLAGS=-std=c++17
-        - GCOV=gcov-10
-    - os: linux
-      dist: bionic
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-10
-      env:
-        - MATRIX_EVAL="CC=gcc-10 CXX=g++-10"
         - CXXFLAGS=-DNDEBUG
         - GCOV=gcov-10
     - os: linux
@@ -83,18 +71,6 @@ matrix:
             - clang-10
       env:
         - MATRIX_EVAL="CC=clang-10 CXX=clang++-10"
-    - os: linux
-      dist: bionic
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-bionic-10
-          packages:
-            - clang-10
-      env:
-        - MATRIX_EVAL="CC=clang-10 CXX=clang++-10"
-        - CXXFLAGS=-std=c++17
     - os: linux
       dist: bionic
       addons:
