@@ -1,4 +1,4 @@
-# fsmlite [![Build Status](https://travis-ci.com/tkem/fsmlite.svg?branch=master)](https://travis-ci.com/tkem/fsmlite/) [![Coverage Status](https://coveralls.io/repos/github/tkem/fsmlite/badge.svg?branch=master)](https://coveralls.io/github/tkem/fsmlite?branch=master) [![Documentation Status](https://readthedocs.org/projects/fsmlite/badge/?version=latest&style=flat)](http://fsmlite.readthedocs.io/en/latest/)
+# fsmlite [![CI build status](https://img.shields.io/github/workflow/status/tkem/fsmlite/CI)](https://github.com/tkem/fsmlite/actions) [![Test coverage](https://img.shields.io/codecov/c/github/tkem/fsmlite/master.svg)](https://codecov.io/gh/tkem/fsmlite) [![Documentation](https://img.shields.io/readthedocs/fsmlite.svg)](https://fsmlite.readthedocs.io/en/latest/)
 
 **fsmlite** is a lightweight finite state machine framework for C++11.
 It is based on concepts first presented by David Abrahams and Aleksey
@@ -144,9 +144,7 @@ private:
 ```
 
 [Documentation][3] is in the works.  In the mean time, please have a
-look at the [unit tests][4] for example usage.  For compiler support,
-please check out the [Travis CI](https://travis-ci.org/tkem/fsmlite/)
-builds.
+look at the [unit tests][4] for example usage.
 
 ## License
 
