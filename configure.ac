@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ([2.61])
 
-AC_INIT([fsmlite], [0.7.4], [tkemmer@computer.org])
+AC_INIT([fsmlite], [0.7.5], [tkemmer@computer.org])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 AC_LANG([C++])
