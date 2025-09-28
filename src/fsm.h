@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2021 Thomas Kemmer
+ * Copyright (c) 2015-2025 Thomas Kemmer
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,6 +25,10 @@
 #ifndef FSMLITE_FSM_H
 #define FSMLITE_FSM_H
 
+#if __cplusplus < 201703L && _MSVC_LANG < 201703L
+#error "fsmlite requires C++17 support."
+#endif
+
 #include <cstddef>
 #include <type_traits>
 
@@ -34,36 +38,14 @@
 
 namespace fsmlite {
     namespace detail {
-#if __cplusplus >= 201703L || _MSVC_LANG >= 201703L
         template<class F, class... Args>
         using invoke_result_t = std::invoke_result_t<F, Args...>;
 
         template <class F, class... Args>
         using is_invocable = std::is_invocable<F, Args...>;
-#elif __cplusplus >= 201103L || _MSVC_LANG >= 201103L
-        template<class F, class... Args>
-        using invoke_result_t = typename std::result_of<F&&(Args&&...)>::type;
 
-        struct is_invocable_test {
-            struct no_type { int a; int b; };
-
-            template<class F, class... Args, class = invoke_result_t<F, Args...>>
-            static char test(int);
-
-            template<class, class...>
-            static no_type test(...);
-        };
-
-        template<class F, class... Args>
-            using is_invocable = typename std::integral_constant<
-            bool,
-            sizeof(is_invocable_test::test<F, Args...>(0)) == 1
-        >::type;
-#else
-#error "fsmlite requires C++11 support."
-#endif
-        // C++11 std::forward() is in <utility>, which may not be
-        // present on freestanding implementations
+        // std::forward() is in <utility>, which may not be present on
+        // freestanding implementations
         template<class T>
         constexpr T&& forward(typename std::remove_reference<T>::type& t) noexcept {
             return static_cast<T&&>(t);
@@ -74,8 +56,8 @@ namespace fsmlite {
             return static_cast<T&&>(t);
         }
 
-        // C++17 std::invoke() is in <functional>, which may not be
-        // present on freestanding implementations
+        // std::invoke() is in <functional>, which may not be present
+        // on freestanding implementations
         template <class F, class... Args>
         invoke_result_t<F, Args...> invoke(F&& f, Args&&... args) {
             return f(args...);
@@ -357,9 +339,8 @@ namespace fsmlite {
             }
         };
 
-#if __cplusplus >= 201703L || _MSVC_LANG >= 201703L
         /**
-         * Generic transition class template (requires C++17).
+         * Generic transition class template.
          *
          * @tparam start the start state of the transition
          *
@@ -387,7 +368,6 @@ namespace fsmlite {
                 return row_base<start, Event, target>::check_guard(guard, self, event);
             }
         };
-#endif
 
     private:
         template<class Event, class...> struct by_event_type;

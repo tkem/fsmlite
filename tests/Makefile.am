@@ -4,9 +4,10 @@ AM_DEFAULT_SOURCE_EXT = .cpp
 
 check_PROGRAMS = \
 	test_basic_row \
-	test_player \
 	test_mem_fn_row \
 	test_notrans \
+	test_player \
+	test_player_mem_fn \
 	test_recursive \
 	test_row \
 	test_scoped \

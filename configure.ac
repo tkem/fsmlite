@@ -16,7 +16,7 @@ AC_CHECK_PROGS([DOXYGEN], [doxygen], [false])
 AC_CHECK_PROGS([SPHINXBUILD], [sphinx-build], [false])
 
 AX_CXXFLAGS_WARN_ALL
-AX_CXX_COMPILE_STDCXX_11
+AX_CXX_COMPILE_STDCXX_17
 
 AC_ARG_ENABLE([coverage],
         AS_HELP_STRING([--enable-coverage], [enable code coverage]),

@@ -4,63 +4,54 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   main:
-    name: ${{ matrix.cc }} (C++${{ matrix.std }}) on ${{ matrix.os }}
+    name: ${{ matrix.cc }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        cc: [clang-10, clang-11, clang-12, gcc-9, gcc-10]
-        std: [11, 17]
+        cc: [clang-18, gcc-13, gcc-14]
         include:
-          - cc: clang-10
-            cxx: clang++-10
-            os: ubuntu-20.04
-          - cc: clang-11
-            cxx: clang++-11
-            os: ubuntu-20.04
-          - cc: clang-12
-            cxx: clang++-12
-            gcov: llvm-cov-12 gcov
-            os: ubuntu-20.04
-          - cc: gcc-9
-            cxx: g++-9
-            gcov: gcov-9
-            os: ubuntu-20.04
-          - cc: gcc-10
-            cxx: g++-10
-            gcov: gcov-10
-            os: ubuntu-20.04
+          - cc: clang-18
+            cxx: clang++-18
+            gcov: llvm-cov-18 gcov
+            os: ubuntu-latest
+          - cc: gcc-13
+            cxx: g++-13
+            os: ubuntu-latest
+          - cc: gcc-14
+            cxx: g++-14
+            gcov: gcov-14
+            os: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Generate configure script
         run: sh autogen.sh
       - name: Configure, build and run tests
         env:
           CC: ${{ matrix.cc }}
           CXX: ${{ matrix.cxx }}
-          CXXFLAGS: -std=c++${{ matrix.std }}
         run: ./configure --enable-coverage && make check
       - name: Create coverage information
         run: ${{ matrix.gcov }} -r *.cpp
         working-directory: tests
         if: ${{ matrix.gcov }}
       - name: Upload coverage information
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5.5.0
         with:
-          name: ${{ matrix.cc }} (C++${{ matrix.std }}) on ${{ matrix.os }}
+          name: ${{ matrix.cc }} on ${{ matrix.os }}
+          token: ${{ secrets.CODECOV_TOKEN }}
         if: ${{ matrix.gcov }}
   msvc:
-    name: Windows ${{ matrix.config }} build (C++${{ matrix.std }})
+    name: Windows ${{ matrix.config }} build
     runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
         config: [Debug, Release]
-        std: [11, 17]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Configure CMake
-        run: cmake -B build -D CMAKE_CXX_STANDARD=${{ matrix.std }}
+        run: cmake -B build
       - name: Build
         run: cmake --build build --config ${{ matrix.config }}
       - name: Run tests

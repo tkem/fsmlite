@@ -2,8 +2,6 @@
 
 #include "fsm.h"
 
-#if __cplusplus >= 201703L || _MSVC_LANG >= 201703L
-
 int value = 0;
 
 // global actions
@@ -51,11 +49,8 @@ private:
     >;
 };
 
-#endif
-
 int main()
 {
-#if __cplusplus >= 201703L || _MSVC_LANG >= 201703L
     state_machine m;
     assert(m.current_state() == state_machine::Init);
     assert(value == 0);
@@ -83,6 +78,6 @@ int main()
     m.process_event(42);
     assert(m.current_state() == state_machine::Exit);
     assert(value == 0);
-#endif
+
     return 0;
 }
