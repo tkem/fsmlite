@@ -15,11 +15,8 @@ if os.environ.get('READTHEDOCS', None) == 'True':
 # TODO: extract from autoconf?
 project = 'fsmlite'
 author = 'Thomas Kemmer'
-version = get_version(b'../configure.ac')
-release = version
-copyright = '%s, %s' % ('2015-2021', author)
-
-master_doc = 'index'
+copyright = '%s, %s' % ('2015-2025', author)
+release = version = get_version(b'../configure.ac')
 
 extensions = [
     'sphinx.ext.autodoc',
@@ -27,6 +24,8 @@ extensions = [
     'sphinx.ext.viewcode',
     'breathe',
 ]
+master_doc = "index"
+html_theme = "classic"
 
 breathe_projects = { project: 'doxyxml/' }
 breathe_default_project = project
