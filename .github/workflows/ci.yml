@@ -11,8 +11,12 @@ jobs:
       matrix:
         cc: [clang-18, gcc-13, gcc-14]
         include:
+          - cc: clang-17
+            cxx: clang++-17
+            os: ubuntu-latest
           - cc: clang-18
             cxx: clang++-18
+            cxxflags: -fno-exceptions
             gcov: llvm-cov-18 gcov
             os: ubuntu-latest
           - cc: gcc-13
@@ -20,6 +24,7 @@ jobs:
             os: ubuntu-latest
           - cc: gcc-14
             cxx: g++-14
+            cxxflags: -fno-exceptions
             gcov: gcov-14
             os: ubuntu-latest
     steps:
@@ -31,16 +36,23 @@ jobs:
           CC: ${{ matrix.cc }}
           CXX: ${{ matrix.cxx }}
         run: ./configure --enable-coverage && make check
+      - name: Configure, build and run tests with ${{ matrix.cxxflags }}
+        if: ${{ matrix.cxxflags }}
+        env:
+          CC: ${{ matrix.cc }}
+          CXX: ${{ matrix.cxx }}
+          CXXFLAGS: ${{ matrix.cxxflags }}
+        run: ./configure --enable-coverage && make check
       - name: Create coverage information
+        if: ${{ matrix.gcov }}
         run: ${{ matrix.gcov }} -r *.cpp
         working-directory: tests
-        if: ${{ matrix.gcov }}
       - name: Upload coverage information
+        if: ${{ matrix.gcov }}
         uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5.5.0
         with:
           name: ${{ matrix.cc }} on ${{ matrix.os }}
           token: ${{ secrets.CODECOV_TOKEN }}
-        if: ${{ matrix.gcov }}
   msvc:
     name: Windows ${{ matrix.config }} build
     runs-on: windows-latest
