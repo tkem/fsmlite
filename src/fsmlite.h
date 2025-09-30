@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef FSMLITE_FSM_H
-#define FSMLITE_FSM_H
+#ifndef FSMLITE_H
+#define FSMLITE_H
 
 #if __cplusplus < 201703L && _MSVC_LANG < 201703L
 #error "fsmlite requires C++17 support."

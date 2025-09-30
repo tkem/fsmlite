@@ -11,7 +11,7 @@ The canonical CD player example (with CD-Text and auto-play support!)
 therefore looks somewhat like this:
 
 ```C++
-#include "fsm.h"
+#include "fsmlite.h"
 
 #include <string>
 

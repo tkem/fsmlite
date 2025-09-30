@@ -1,4 +1,4 @@
-#include "fsm.h"
+#include "fsmlite.h"
 
 #include <cassert>
 #include <iostream>

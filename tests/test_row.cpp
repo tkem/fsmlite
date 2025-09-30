@@ -1,6 +1,6 @@
 #include <cassert>
 
-#include "fsm.h"
+#include "fsmlite.h"
 
 int value = 0;
 

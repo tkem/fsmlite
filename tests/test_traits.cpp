@@ -1,7 +1,7 @@
 #include <cassert>
 #include <type_traits>
 
-#include "fsm.h"
+#include "fsmlite.h"
 
 using namespace fsmlite::detail;
 

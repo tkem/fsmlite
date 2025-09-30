@@ -1,7 +1,7 @@
 #include <cassert>
 #include <memory>
 
-#include "fsm.h"
+#include "fsmlite.h"
 
 class state_machine: public fsmlite::fsm<state_machine> {
     friend class fsmlite::fsm<state_machine>;  // base class needs access to transition_table
