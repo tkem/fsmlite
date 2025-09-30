@@ -315,6 +315,8 @@ namespace fsmlite {
          * @tparam action an action member function, or `nullptr`
          *
          * @tparam guard a guard member function, or `nullptr`
+         *
+         * @deprecated since version 1.0
          */
         template<
             State start,

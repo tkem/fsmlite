@@ -1,9 +1,11 @@
 # fsmlite [![CI build status](https://img.shields.io/github/workflow/status/tkem/fsmlite/CI)](https://github.com/tkem/fsmlite/actions) [![Test coverage](https://img.shields.io/codecov/c/github/tkem/fsmlite/master.svg)](https://codecov.io/gh/tkem/fsmlite) [![Documentation](https://img.shields.io/readthedocs/fsmlite.svg)](https://fsmlite.readthedocs.io/en/latest/)
 
-**fsmlite** is a lightweight finite state machine framework for C++11.
+**fsmlite** is a lightweight finite state machine framework for C++17.
 It is based on concepts first presented by David Abrahams and Aleksey
 Gurtovoy in [C++ Template Metaprogramming][1], with additional ideas
-taken liberally from Boost's [Meta State Machine][2] (MSM).
+taken liberally from Boost's [Meta State Machine][2] (MSM), and
+slightly "modernized" to make use of features more recently
+introduced to the C++ standard.
 
 The canonical CD player example (with CD-Text and auto-play support!)
 therefore looks somewhat like this:
@@ -13,74 +15,6 @@ therefore looks somewhat like this:
 
 #include <string>
 
-class player: public fsmlite::fsm<player> {
-    // grant base class access to private transition_table
-    friend class fsmlite::fsm<player>;
-
-    std::string cd_title;
-    bool autoplay = false;
-
-public:
-    enum states { Stopped, Open, Empty, Playing, Paused };
-
-    player(state_type init_state = Empty) : fsm(init_state) { }
-
-    void set_autoplay(bool f) { autoplay = f; }
-
-    bool is_autoplay() const { return autoplay; }
-
-    const std::string& get_cd_title() const { return cd_title; }
-
-    struct play {};
-    struct open_close {};
-    struct cd_detected { std::string title; };
-    struct stop {};
-    struct pause {};
-
-private:
-    // guards
-    bool is_autoplay(const cd_detected&) const { return autoplay; }
-    bool is_bad_cd(const cd_detected& cd) const { return cd.title.empty(); }
-
-    // actions
-    void start_playback(const play&);
-    void start_autoplay(const cd_detected& cd);
-    void open_drawer(const open_close&);
-    void open_drawer(const cd_detected& cd);
-    void close_drawer(const open_close&);
-    void store_cd_info(const cd_detected& cd);
-    void stop_playback(const stop&);
-    void pause_playback(const pause&);
-    void stop_and_open(const open_close&);
-    void resume_playback(const play&);
-
-private:
-    using m = player;  // for brevity
-
-    using transition_table = table<
-//              Start    Event        Target   Action              Guard (optional)
-//  -----------+--------+------------+--------+-------------------+---------------+-
-    mem_fn_row< Stopped, play,        Playing, &m::start_playback                  >,
-    mem_fn_row< Stopped, open_close,  Open,    &m::open_drawer                     >,
-    mem_fn_row< Open,    open_close,  Empty,   &m::close_drawer                    >,
-    mem_fn_row< Empty,   open_close,  Open,    &m::open_drawer                     >,
-    mem_fn_row< Empty,   cd_detected, Open,    &m::open_drawer,    &m::is_bad_cd   >,
-    mem_fn_row< Empty,   cd_detected, Playing, &m::start_autoplay, &m::is_autoplay >,
-    mem_fn_row< Empty,   cd_detected, Stopped, &m::store_cd_info   /* fallback */  >,
-    mem_fn_row< Playing, stop,        Stopped, &m::stop_playback                   >,
-    mem_fn_row< Playing, pause,       Paused,  &m::pause_playback                  >,
-    mem_fn_row< Playing, open_close,  Open,    &m::stop_and_open                   >,
-    mem_fn_row< Paused,  play,        Playing, &m::resume_playback                 >,
-    mem_fn_row< Paused,  stop,        Stopped, &m::stop_playback                   >,
-    mem_fn_row< Paused,  open_close,  Open,    &m::stop_and_open                   >
-//  -----------+--------+------------+--------+-------------------+---------------+-
-    >;
-};
-```
-
-C++17 will give you a little more flexibility:
-
-```C++
 class player: public fsmlite::fsm<player> {
     // grant base class access to private transition_table
     friend class fsmlite::fsm<player>;
@@ -143,12 +77,12 @@ private:
 };
 ```
 
-[Documentation][3] is in the works.  In the mean time, please have a
-look at the [unit tests][4] for example usage.
+Basic [Documentation][3] is available, but please also have a look at
+the [unit tests][4] for example usage.
 
 ## License
 
-Copyright (c) 2015-2021 Thomas Kemmer
+Copyright (c) 2015-2025 Thomas Kemmer
 
 Licensed under the [MIT License (MIT)][5].
 
