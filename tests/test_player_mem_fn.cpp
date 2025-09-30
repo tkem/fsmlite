@@ -28,21 +28,54 @@ public:
     struct pause {};
 
 private:
-    // guards
     bool is_autoplay(const cd_detected&) const { return autoplay; }
+
     bool is_bad_cd(const cd_detected& cd) const { return cd.title.empty(); }
 
-    // actions
-    void start_playback(const play&);
-    void start_autoplay(const cd_detected& cd);
-    void open_drawer(const open_close&);
-    void open_drawer(const cd_detected& cd);
-    void close_drawer(const open_close&);
-    void store_cd_info(const cd_detected& cd);
-    void stop_playback(const stop&);
-    void pause_playback(const pause&);
-    void stop_and_open(const open_close&);
-    void resume_playback(const play&);
+    void start_playback(const play&) {
+        std::cout << "Starting playback\n";
+    }
+
+    void start_autoplay(const cd_detected& cd) {
+        std::cout << "Starting playback of '" << cd.title << "'\n";
+        cd_title = cd.title;
+    }
+
+    void open_drawer(const open_close&) {
+        std::cout << "Opening drawer\n";
+        cd_title.clear();
+    }
+
+    void open_drawer(const cd_detected& cd) {
+        std::cout << "Ejecting bad CD\n";
+        cd_title.clear();
+    }
+
+    void close_drawer(const open_close&) {
+        std::cout << "Closing drawer\n";
+    }
+
+    void store_cd_info(const cd_detected& cd) {
+        std::cout << "Detected CD '" << cd.title << "'\n";
+        cd_title = cd.title;
+    }
+
+    void stop_playback(const stop&) {
+        std::cout << "Stopping playback\n";
+    }
+
+    void pause_playback(const pause&) {
+        std::cout << "Pausing playback\n";
+    }
+
+    void stop_and_open(const open_close&) {
+        std::cout << "Stopping and opening drawer\n";
+        cd_title.clear();
+    }
+
+    void resume_playback(const play&) {
+        std::cout << "Resuming playback\n";
+    }
 
 private:
     using m = player;  // for brevity
@@ -66,61 +99,6 @@ private:
 //  -----------+--------+------------+--------+-------------------+---------------+-
     >;
 };
-
-void player::start_playback(const play&)
-{
-    std::cout << "Starting playback\n";
-}
-
-void player::start_autoplay(const cd_detected& cd)
-{
-    std::cout << "Starting playback of '" << cd.title << "'\n";
-    cd_title = cd.title;
-}
-
-void player::open_drawer(const open_close&)
-{
-    std::cout << "Opening drawer\n";
-    cd_title.clear();
-}
-
-void player::open_drawer(const cd_detected&)
-{
-    std::cout << "Ejecting bad CD\n";
-    cd_title.clear();
-}
-
-void player::close_drawer(const open_close&)
-{
-    std::cout << "Closing drawer\n";
-}
-
-void player::store_cd_info(const cd_detected& cd)
-{
-    std::cout << "Detected CD '" << cd.title << "'\n";
-    cd_title = cd.title;
-}
-
-void player::stop_playback(const stop&)
-{
-    std::cout << "Stopping playback\n";
-}
-
-void player::pause_playback(const pause&)
-{
-    std::cout << "Pausing playback\n";
-}
-
-void player::stop_and_open(const open_close&)
-{
-    std::cout << "Stopping and opening drawer\n";
-    cd_title.clear();
-}
-
-void player::resume_playback(const play&)
-{
-    std::cout << "Resuming playback\n";
-}
 
 void test_player()
 {
@@ -191,10 +169,46 @@ void test_autoplay()
     assert(p.get_cd_title() == "louie, louie");
 }
 
+void test_open_close()
+{
+    player p;
+    assert(p.current_state() == player::Empty);
+    p.process_event(player::cd_detected{"louie, louie"});
+    assert(p.current_state() == player::Stopped);
+    assert(p.get_cd_title() == "louie, louie");
+    p.process_event(player::play());
+    assert(p.current_state() == player::Playing);
+    assert(p.get_cd_title() == "louie, louie");
+    p.process_event(player::pause());
+    assert(p.current_state() == player::Paused);
+    assert(p.get_cd_title() == "louie, louie");
+    p.process_event(player::stop());
+    assert(p.current_state() == player::Stopped);
+    assert(p.get_cd_title() == "louie, louie");
+    p.process_event(player::open_close());
+    assert(p.current_state() == player::Open);
+    assert(p.get_cd_title().empty());
+    p.process_event(player::open_close());
+    assert(p.current_state() == player::Empty);
+    p.process_event(player::cd_detected{"louie, louie"});
+    assert(p.current_state() == player::Stopped);
+    assert(p.get_cd_title() == "louie, louie");
+    p.process_event(player::play());
+    assert(p.current_state() == player::Playing);
+    assert(p.get_cd_title() == "louie, louie");
+    p.process_event(player::pause());
+    assert(p.current_state() == player::Paused);
+    assert(p.get_cd_title() == "louie, louie");
+    p.process_event(player::open_close());
+    assert(p.current_state() == player::Open);
+    assert(p.get_cd_title().empty());
+}
+
 int main()
 {
     test_player();
     test_bad_cd();
     test_autoplay();
+    test_open_close();
     return 0;
 }

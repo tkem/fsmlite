@@ -34,6 +34,7 @@ private:
 int main()
 {
     state_machine m;
+#if !defined(NDEBUG) && (!__GNUC__ || __EXCEPTIONS)
     try {
         m.process_event(0);
     } catch (std::logic_error& e) {
@@ -41,4 +42,7 @@ int main()
         return 0;
     }
     return 1;  /* LCOV_EXCL_LINE */
+#else
+    return 0;  /* LCOV_EXCL_LINE */
+#endif
 }

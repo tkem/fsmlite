@@ -41,3 +41,4 @@ configure
 # coverage generated
 *.gcda
 *.gcno
+*.gcov
