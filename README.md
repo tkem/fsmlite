@@ -75,6 +75,13 @@ private:
 //  ----+--------+------------+--------+-------------------+-----------------+-
     >;
 };
+
+player p;                                       // p.current_state() == player::Empty
+p.process_event(player::open_close());          // p.current_state() == player::Open
+p.process_event(player::open_close());          // p.current_state() == player::Empty
+p.process_event(player::cd_detected{"Help!"});  // p.current_state() == player::Stopped
+p.process_event(player::play());                // p.current_state() == player::Playing
+p.process_event(player::pause());               // p.current_state() == player::Paused
 ```
 
 Basic [Documentation][3] is available, but please also have a look at
