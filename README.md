@@ -1,4 +1,4 @@
-# fsmlite [![CI build status](https://img.shields.io/github/actions/workflow/status/tkem/fsmlite/ci.yml)](https://github.com/tkem/fsmlite/actions/workflows/ci.yml) [![Test coverage](https://img.shields.io/codecov/c/github/tkem/fsmlite/master.svg)](https://codecov.io/gh/tkem/fsmlite) [![Documentation](https://img.shields.io/readthedocs/fsmlite.svg)](https://fsmlite.readthedocs.io/en/latest/)
+# fsmlite [![CI build status](https://img.shields.io/github/actions/workflow/status/tkem/fsmlite/ci.yml)](https://github.com/tkem/fsmlite/actions/workflows/ci.yml) [![Documentation build status](https://img.shields.io/readthedocs/fsmlite)](https://fsmlite.readthedocs.io/) [![Test coverage](https://img.shields.io/codecov/c/github/tkem/fsmlite/master.svg)](https://codecov.io/gh/tkem/fsmlite) [![License](https://img.shields.io/github/license/tkem/fsmlite)](https://raw.github.com/tkem/cachetools/master/LICENSE)
 
 **fsmlite** is a lightweight finite state machine framework for C++17.
 It is based on concepts first presented by David Abrahams and Aleksey
