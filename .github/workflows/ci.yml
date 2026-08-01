@@ -28,7 +28,7 @@ jobs:
             gcov: gcov-14
             os: ubuntu-latest
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Generate configure script
         run: sh autogen.sh
       - name: Configure, build and run tests
@@ -61,7 +61,7 @@ jobs:
       matrix:
         config: [Debug, Release]
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Configure CMake
         run: cmake -B build
       - name: Build
